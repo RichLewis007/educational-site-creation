@@ -1,2 +1,2 @@
 # educational-site-creation
-Educational exercise for students: Create website in astro framework
+Educational exercise for MakerFriends students: Create website in astro framework
