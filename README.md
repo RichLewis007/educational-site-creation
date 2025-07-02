@@ -4,6 +4,3 @@ Educational exercise for MakerFriends students: Create website in astro framewor
 edit0
 
 
-edit3
-edit5
-edit45
