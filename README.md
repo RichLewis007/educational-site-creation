@@ -1,5 +1,2 @@
 # educational-site-creation
-Educational exercise for MakerFriends students: Create a website in `astro` framework
-
-edit0
-test1
+An educational exercise for MakerFriends students: Create a website in `astro` framework, exercise git skills using this repository.
