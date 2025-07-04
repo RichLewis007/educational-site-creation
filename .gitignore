@@ -1,5 +1,6 @@
 # Ignore git cleanup script
 gitcleanup.sh
+sync_local_with_upstream.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
