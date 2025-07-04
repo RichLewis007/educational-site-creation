@@ -1,4 +1,4 @@
-name: Sync Fork with Upstream
+name: sync-fork-with-upstream
 
 on:
   schedule:
