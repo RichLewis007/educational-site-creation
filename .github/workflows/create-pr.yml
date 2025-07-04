@@ -1,0 +1,31 @@
+name: Auto PR to Upstream
+
+on:
+  push:
+    branches:
+      - '**'  # Any branch push (can refine to a prefix)
+
+jobs:
+  create-pr:
+    if: github.repository_owner == 'RichLewis007'  # Ensure it only runs in your fork
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        uses: cli/cli-action@v2
+
+      - name: Create pull request to upstream
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}")
+          gh pr create \
+            --title "Auto PR: $BRANCH_NAME" \
+            --body "Automated PR from branch $BRANCH_NAME" \
+            --base main \
+            --head "${{ github.repository_owner }}:$BRANCH_NAME" \
+            --repo MakerFriends/educational-site-creation \
+            --label automated
