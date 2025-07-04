@@ -1,4 +1,4 @@
-name: Auto PR to Upstream
+name: Any BRANCH PUSH to 007 fork triggers auto PULL REQUEST to Upstream
 
 on:
   push:
@@ -19,7 +19,7 @@ jobs:
           sudo apt update
           sudo apt install -y gh
 
-      - name: Create pull request to upstream
+      - name: Create pull request to upstream owner/repo branch-MakerFriends/educational-site-creation main
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
