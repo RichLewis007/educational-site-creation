@@ -1,14 +1,14 @@
 name: auto-create-branch-pull-request-for-upstream
-# Any BRANCH PUSH to 007 fork triggers auto PULL REQUEST to Upstream
+# Only create PRs for relevant branches. Skip PRs for branches like gh-pages, sync-fork, etc."
 
 on:
   push:
     branches:
-      - '**'  # Any branch push (can refine to a prefix)
+      - '**'
 
 jobs:
   create-pr:
-    if: github.repository_owner == 'RichLewis007'  # Ensure it only runs in your fork
+    if: github.repository_owner == 'RichLewis007'
     runs-on: ubuntu-latest
 
     steps:
@@ -20,32 +20,45 @@ jobs:
           sudo apt update
           sudo apt install -y gh
 
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
+
       - name: Check if Pull Request is needed
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          git fetch upstream
+
+          # Skip PRs for ignored branches
+          IGNORE_BRANCHES=("gh-pages" "sync-fork")
+          for IGNORE in "${IGNORE_BRANCHES[@]}"; do
+            if [[ "$BRANCH_NAME" == "$IGNORE" ]]; then
+              echo "🚫 Skipping PR creation for ignored branch: $BRANCH_NAME"
+              exit 0
+            fi
+          done
+
           git fetch origin
+          git fetch upstream
 
           if [ "$BRANCH_NAME" == "main" ]; then
             echo "🔍 Checking for commits between upstream/main and origin/main"
-            COUNT=$(git rev-list --count upstream/main..origin/main)
+            COUNT=$(git rev-list --count remotes/upstream/main..remotes/origin/main)
             if [ "$COUNT" -eq 0 ]; then
-              echo "✅ No commits to Pull Request — skipping pull request"
+              echo "✅ No commits to Pull Request — skipping"
               exit 0
             fi
+            echo "🔍 Commits to PR: $COUNT"
+            git log remotes/upstream/main..remotes/origin/main --oneline
           fi
-          
+
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          # Ensure the GitHub CLI is authenticated
-          BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}")
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           gh auth status          
           gh pr create \
             --title "Automated Pull Request: $BRANCH_NAME" \
             --body "Automated Pull Request from RichLewis007 branch $BRANCH_NAME." \
             --base main \
             --head "${{ github.repository_owner }}:$BRANCH_NAME" \
-            --repo MakerFriends/educational-site-creation \
-
+            --repo MakerFriends/educational-site-creation || echo "ℹ️ PR already exists or not needed"
