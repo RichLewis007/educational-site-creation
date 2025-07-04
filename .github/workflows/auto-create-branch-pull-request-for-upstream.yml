@@ -20,6 +20,21 @@ jobs:
           sudo apt update
           sudo apt install -y gh
 
+      - name: Check if Pull Request is needed
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          git fetch upstream
+          git fetch origin
+
+          if [ "$BRANCH_NAME" == "main" ]; then
+            echo "🔍 Checking for commits between upstream/main and origin/main"
+            COUNT=$(git rev-list --count upstream/main..origin/main)
+            if [ "$COUNT" -eq 0 ]; then
+              echo "✅ No commits to Pull Request — skipping pull request"
+              exit 0
+            fi
+          fi
+          
       - name: Create Pull Request
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -28,7 +43,7 @@ jobs:
           BRANCH_NAME=$(echo "${GITHUB_REF#refs/heads/}")
           gh auth status          
           gh pr create \
-            --title "Auto PR: $BRANCH_NAME" \
+            --title "Automated Pull Request: $BRANCH_NAME" \
             --body "Automated Pull Request from RichLewis007 branch $BRANCH_NAME." \
             --base main \
             --head "${{ github.repository_owner }}:$BRANCH_NAME" \
