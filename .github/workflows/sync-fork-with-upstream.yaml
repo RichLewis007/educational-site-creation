@@ -2,39 +2,39 @@ name: sync-fork-with-upstream
 
 on:
   schedule:
-    - cron: '0 * * * *' # Runs every hour; adjust as needed
-  workflow_dispatch:       # Allow manual triggering
+    - cron: '0 * * * *'  # Runs every hour
+  workflow_dispatch:       # Manual trigger
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-    # Prevents execution in the upstream repo even if the workflow file is present.
-    # if: github.repository == 'RichLewis007/educational-site-creation' && startsWith(github.ref, 'refs/heads/')
-    if: github.repository_owner == 'RichLewis007'
-    
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v4
-          with:
-            persist-credentials: false
 
-        - name: Set up Git
-          run: |
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    # Prevents execution in the upstream repo even if the workflow file is present
+    if: ${{ github.repository_owner == 'RichLewis007' }}
 
-        - name: Add upstream remote and fetch
-          run: |
-            git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
-            git fetch upstream
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-        - name: Merge upstream/main into origin/main
-          run: |
-            git checkout main
-            git merge upstream/main --no-edit || echo "Already up to date"
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-        - name: Push changes back to origin
-          env:
-            GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          run: |
-            git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} main
+      - name: Add upstream remote and fetch
+        run: |
+          git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
+          git fetch upstream
+
+      - name: Merge upstream/main into origin/main
+        run: |
+          git checkout main
+          git merge upstream/main --no-edit || echo "Already up to date"
+
+      - name: Push changes back to origin
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} main
