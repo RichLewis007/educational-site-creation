@@ -1,0 +1,33 @@
+# Tests: This workflow assumes your CI passes. Add "statusChecks" if you want to wait for specific checks to pass.
+# Security: Auto-merging from forks is risky. Keep allowForks: false unless you're handling validations elsewhere.
+# Bot Access: GITHUB_TOKEN has limited access; for advanced workflows (e.g., repo in orgs), use a fine-grained PAT.
+
+name: Auto Merge PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+      contents: write
+
+    steps:
+      - name: Auto-merge PRs from trusted sources
+        uses: pascalgn/automerge-action@v0.15.6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          mergeMethod: squash
+          mergeCommitMessage: pull-request-title
+          authorEmail: bot@github.com
+          authorName: Auto Merge Bot
+          allowForks: true
+          reviewers: ''  # require no reviewers
+          blockingLabels: 'do-not-merge'
+          requiredLabels: 'automerge'
+
