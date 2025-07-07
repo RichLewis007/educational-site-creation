@@ -56,11 +56,13 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
+
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "Creating PR for branch: $BRANCH_NAME"
           gh auth status
           gh pr create \
             --title "Automated Pull Request: $BRANCH_NAME" \
-            --body "Automated Pull Request from RichLewis007 branch $BRANCH_NAME." \
+            --body "Automated Pull Request from ${{ github.repository_owner }} branch $BRANCH_NAME." \
             --label "automerge" \
             --base main \
             --head "${{ github.repository_owner }}:$BRANCH_NAME" \
