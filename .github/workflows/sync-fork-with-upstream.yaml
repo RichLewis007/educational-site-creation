@@ -46,6 +46,6 @@ jobs:
 
       - name: Push changes back to origin
         env:
-          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+          UPSTREAM_GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
         run: |
           git push https://x-access-token:${UPSTREAM_GH_TOKEN}@github.com/${{ github.repository }} main
