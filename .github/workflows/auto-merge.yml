@@ -13,6 +13,7 @@ jobs:
   auto-merge:
     runs-on: ubuntu-latest
 
+    echo "${{ github.repository_owner}}"
     # Prevents execution in forks or untrusted repositories
     if: ${{ github.repository_owner == 'MakerFriends' }}
 
