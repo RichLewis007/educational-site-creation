@@ -3,14 +3,25 @@ name: sync-fork-with-upstream
 on:
   schedule:
     - cron: '0 * * * *'  # Runs every hour
-  workflow_dispatch:       # Manual trigger
+  workflow_dispatch:
 
+# Immediately cancel workflow if this is not the fork
 jobs:
-  sync:
+  precheck:
     runs-on: ubuntu-latest
+    steps:
+      - name: Cancel if not running in fork
+        run: |
+          echo "🔍 Running in repo: ${{ github.repository }}"
+          if [ "${{ github.repository_owner }}" != "RichLewis007" ]; then
+            echo "⛔ Exiting: This workflow is only for the fork."
+            exit 0
+          fi
 
-    # Prevents execution in the upstream repo even if the workflow file is present
+  sync:
+    needs: precheck
     if: ${{ github.repository_owner == 'RichLewis007' }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
