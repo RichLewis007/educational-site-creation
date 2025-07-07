@@ -69,9 +69,9 @@ jobs:
 
       - name: Create Pull Request
         env:
-          GH_TOKEN: ${{ secrets.FORKED_GH_TOKEN }}
+          FORK_GH_TOKEN2: ${{ secrets.FORK_GH_TOKEN2 }}
         run: |
-          if: env.FORKED_GH_TOKEN != '' # prevent running in upstream
+          if: env.FORK_GH_TOKEN2 != '' # prevent running in upstream
             BRANCH_NAME="${GITHUB_REF#refs/heads/}"
             echo "📬 Creating PR for: $BRANCH_NAME"
             gh auth status
