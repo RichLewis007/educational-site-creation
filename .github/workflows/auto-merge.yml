@@ -7,16 +7,13 @@ name: Auto Merge PRs
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  workflow_dispatch:       # Allow manual triggering
+  workflow_dispatch:  # Allow manual triggering
 
 jobs:
   auto-merge:
-    # Prevents execution in the upstream repo even if the workflow file is present.
-    # if: github.repository == 'makerfriends/educational-site-creation' && startsWith(github.ref, 'refs/heads/')
-
-    
     runs-on: ubuntu-latest
 
+    # Prevents execution in forks or untrusted repositories
     if: ${{ github.repository_owner == 'MakerFriends' }}
 
     permissions:
@@ -27,14 +24,13 @@ jobs:
       - name: Auto-merge PRs from trusted sources
         uses: pascalgn/automerge-action@v0.15.6
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           mergeMethod: squash
           mergeCommitMessage: pull-request-title
           authorEmail: bot@github.com
           authorName: Auto Merge Bot
-          allowForks: true
-          reviewers: ''  # require no reviewers
+          allowForks: false               # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
+          reviewers: ''                   # No reviewers required
           blockingLabels: 'do-not-merge'
           requiredLabels: 'automerge'
-
