@@ -32,7 +32,7 @@ jobs:
       - name: Auto-merge PRs from trusted sources
         uses: pascalgn/automerge-action@v0.15.6
         env:
-          GH_TOKEN : ${{ secrets.UPSTREAM_GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
+          GITHUB_TOKEN : ${{ secrets.UPSTREAM_GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
           MERGE_METHOD: squash
           MERGE_COMMIT_MESSAGE: pull-request-title
           AUTHOR_EMAIL: bot@github.com
