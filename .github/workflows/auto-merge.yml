@@ -20,16 +20,16 @@ jobs:
       pull-requests: write
       contents: write
 
-  steps:
-    - name: Auto-merge PRs from trusted sources
-      uses: pascalgn/automerge-action@v0.15.6
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
-        MERGE_METHOD: squash
-        MERGE_COMMIT_MESSAGE: pull-request-title
-        AUTHOR_EMAIL: bot@github.com
-        AUTHOR_NAME: Auto Merge Bot
-        ALLOW_FORKS: true # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
-        REVIEWERS: '' # No reviewers required
-        BLOCKING_LABELS: do-not-merge
-        REQUIRED_LABELS: automerge
+    steps:
+      - name: Auto-merge PRs from trusted sources
+        uses: pascalgn/automerge-action@v0.15.6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
+          MERGE_METHOD: squash
+          MERGE_COMMIT_MESSAGE: pull-request-title
+          AUTHOR_EMAIL: bot@github.com
+          AUTHOR_NAME: Auto Merge Bot
+          ALLOW_FORKS: true # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
+          REVIEWERS: '' # No reviewers required
+          BLOCKING_LABELS: do-not-merge
+          REQUIRED_LABELS: automerge
