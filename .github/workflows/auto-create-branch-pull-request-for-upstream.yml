@@ -9,59 +9,60 @@ on:
 jobs:
   create-pr:
     # Prevents execution in the upstream repo even if the workflow file is present.
-    if: github.repository == 'RichLewis007/educational-site-creation' && startsWith(github.ref, 'refs/heads/')
+    # if: github.repository == 'RichLewis007/educational-site-creation' && startsWith(github.ref, 'refs/heads/')
+    if: github.repository_owner == 'RichLewis007'
 
-    runs-on: ubuntu-latest
+      runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      steps:
+        - name: Checkout repo
+          uses: actions/checkout@v4
 
-      - name: Install GitHub CLI
-        run: |
-          sudo apt update
-          sudo apt install -y gh
+        - name: Install GitHub CLI
+          run: |
+            sudo apt update
+            sudo apt install -y gh
 
-      - name: Add upstream remote
-        run: git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
+        - name: Add upstream remote
+          run: git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
 
-      - name: Check if Pull Request is needed
-        run: |
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+        - name: Check if Pull Request is needed
+          run: |
+            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
 
-          # Skip PRs for ignored branches
-          IGNORE_BRANCHES=("gh-pages" "sync-fork")
-          for IGNORE in "${IGNORE_BRANCHES[@]}"; do
-            if [[ "$BRANCH_NAME" == "$IGNORE" ]]; then
-              echo "🚫 Skipping PR creation for ignored branch: $BRANCH_NAME"
-              exit 0
+            # Skip PRs for ignored branches
+            IGNORE_BRANCHES=("gh-pages" "sync-fork")
+            for IGNORE in "${IGNORE_BRANCHES[@]}"; do
+              if [[ "$BRANCH_NAME" == "$IGNORE" ]]; then
+                echo "🚫 Skipping PR creation for ignored branch: $BRANCH_NAME"
+                exit 0
+              fi
+            done
+
+            git fetch origin
+            git fetch upstream
+
+            if [ "$BRANCH_NAME" == "main" ]; then
+              echo "🔍 Checking for commits between upstream/main and origin/main"
+              COUNT=$(git rev-list --count remotes/upstream/main..remotes/origin/main)
+              if [ "$COUNT" -eq 0 ]; then
+                echo "✅ No commits to Pull Request — skipping"
+                exit 0
+              fi
+              echo "🔍 Commits to PR: $COUNT"
+              git log remotes/upstream/main..remotes/origin/main --oneline
             fi
-          done
 
-          git fetch origin
-          git fetch upstream
-
-          if [ "$BRANCH_NAME" == "main" ]; then
-            echo "🔍 Checking for commits between upstream/main and origin/main"
-            COUNT=$(git rev-list --count remotes/upstream/main..remotes/origin/main)
-            if [ "$COUNT" -eq 0 ]; then
-              echo "✅ No commits to Pull Request — skipping"
-              exit 0
-            fi
-            echo "🔍 Commits to PR: $COUNT"
-            git log remotes/upstream/main..remotes/origin/main --oneline
-          fi
-
-      - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: |
-          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          gh auth status          
-          gh pr create \
-            --title "Automated Pull Request: $BRANCH_NAME" \
-            --body "Automated Pull Request from RichLewis007 branch $BRANCH_NAME." \
-            --label "automerge" \
-            --base main \
-            --head "${{ github.repository_owner }}:$BRANCH_NAME" \
-            --repo MakerFriends/educational-site-creation || echo "ℹ️ PR already exists or not needed"
+        - name: Create Pull Request
+          env:
+            GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          run: |
+            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+            gh auth status          
+            gh pr create \
+              --title "Automated Pull Request: $BRANCH_NAME" \
+              --body "Automated Pull Request from RichLewis007 branch $BRANCH_NAME." \
+              --label "automerge" \
+              --base main \
+              --head "${{ github.repository_owner }}:$BRANCH_NAME" \
+              --repo MakerFriends/educational-site-creation || echo "ℹ️ PR already exists or not needed"
