@@ -8,7 +8,9 @@ on:
 
 jobs:
   create-pr:
-    if: github.repository_owner == 'RichLewis007'
+    # Prevents execution in the upstream repo even if the workflow file is present.
+    if: github.repository == 'RichLewis007/educational-site-creation' && startsWith(github.ref, 'refs/heads/')
+
     runs-on: ubuntu-latest
 
     steps:
