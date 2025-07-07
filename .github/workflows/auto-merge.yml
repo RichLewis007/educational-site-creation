@@ -30,7 +30,7 @@ jobs:
           mergeCommitMessage: pull-request-title
           authorEmail: bot@github.com
           authorName: Auto Merge Bot
-          allowForks: false               # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
+          allowForks: true               # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
           reviewers: ''                   # No reviewers required
           blockingLabels: 'do-not-merge'
           requiredLabels: 'automerge'
