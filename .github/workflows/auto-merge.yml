@@ -13,7 +13,7 @@ jobs:
   auto-merge:
     # Prevents execution in the upstream repo even if the workflow file is present.
     # if: github.repository == 'makerfriends/educational-site-creation' && startsWith(github.ref, 'refs/heads/')
-    echo "$github.repository"
+    # run: echo "$GITHUB_REPOSITORY"
     
     runs-on: ubuntu-latest
 
