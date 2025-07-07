@@ -72,7 +72,7 @@ jobs:
           FORK_GH_TOKEN2: ${{ secrets.FORK_GH_TOKEN2 }}
         run: |
           # prevent running in upstream
-          if: env.FORK_GH_TOKEN2 != ''
+          if [ env.FORK_GH_TOKEN2 != '' ]; then
             BRANCH_NAME="${GITHUB_REF#refs/heads/}"
             echo "📬 Creating PR for: $BRANCH_NAME"
             gh auth status
@@ -83,3 +83,4 @@ jobs:
               --base main \
               --head "${{ github.repository_owner }}:$BRANCH_NAME" \
               --repo MakerFriends/educational-site-creation || echo "ℹ️ PR already exists or failed silently"
+          fi
