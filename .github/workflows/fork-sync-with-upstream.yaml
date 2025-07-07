@@ -46,6 +46,6 @@ jobs:
 
       - name: Push changes back to origin
         env:
-          FORK_GH_TOKEN2: ${{ secrets.FORK_GH_TOKEN2 }}
+          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN2 }}
         run: |
-          git push https://x-access-token:${FORK_GH_TOKEN2}@github.com/${{ github.repository }} main
+          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} main
