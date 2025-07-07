@@ -69,7 +69,7 @@ jobs:
 
       - name: Create Pull Request
         env:
-          GH_TOKEN: ${{ secrets.FORKED_GH_TOKEN }}
+          FORKED_GH_TOKEN: ${{ secrets.FORKED_GH_TOKEN }}
         run: |
           if: env.FORKED_GH_TOKEN != '' # prevent running in upstream
             BRANCH_NAME="${GITHUB_REF#refs/heads/}"
