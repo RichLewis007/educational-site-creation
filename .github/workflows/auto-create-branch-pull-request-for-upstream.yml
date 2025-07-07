@@ -61,6 +61,7 @@ jobs:
           gh pr create \
             --title "Automated Pull Request: $BRANCH_NAME" \
             --body "Automated Pull Request from RichLewis007 branch $BRANCH_NAME." \
+            --label "automerge" \
             --base main \
             --head "${{ github.repository_owner }}:$BRANCH_NAME" \
             --repo MakerFriends/educational-site-creation || echo "ℹ️ PR already exists or not needed"
