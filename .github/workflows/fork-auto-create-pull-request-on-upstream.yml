@@ -32,7 +32,7 @@ jobs:
       - name: Show auth status
         run: gh auth status
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN4 }}
     
       - name: Checkout repo
         uses: actions/checkout@v4
