@@ -27,11 +27,11 @@ jobs:
     needs: precheck
     if: needs.precheck.outputs.is-fork == 'true'
     runs-on: ubuntu-latest
-
+    env:
+      GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
+      
     steps:
       - name: Confirm GH_TOKEN is set
-        env:
-          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
         run: |
           if [ -z "$GH_TOKEN" ]; then
             echo "❌ GH_TOKEN is missing. Please set the secret correctly."
@@ -39,14 +39,14 @@ jobs:
           else
             echo "✅ GH_TOKEN appears to be set."
           fi
-    
+
+      - name: Checkout repo
+        uses: actions/checkout@v4    
+
       - name: Show auth status
         env:
           GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
         run: gh auth status
-    
-      - name: Checkout repo
-        uses: actions/checkout@v4
 
       - name: Install GitHub CLI
         run: |
@@ -84,8 +84,6 @@ jobs:
           fi
 
       - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
         run: |
           # prevent running in upstream
           if [ env.GH_TOKEN != '' ]; then
