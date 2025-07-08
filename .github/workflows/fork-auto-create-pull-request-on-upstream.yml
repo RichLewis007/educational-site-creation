@@ -101,9 +101,16 @@ jobs:
         run: |
           echo "🧹 Closing older PRs from the same branch (excluding most recent: #$PR_NUMBER)"
 
-          jq '.[1:] | .[] | .number' prlist.json | while read -r OLD_PR; do
-            echo "🛑 Closing old PR #$OLD_PR"
-            gh pr close "$OLD_PR" --comment "Closed automatically in favor of newer PR #$PR_NUMBER."
+          jq -c '.[1:][]' prlist.json | while read -r pr; do
+            PR_NUM=$(echo "$pr" | jq -r '.number')
+            PR_STATE=$(echo "$pr" | jq -r '.state')
+          
+            if [[ "$PR_STATE" == "OPEN" ]]; then
+              echo "🛑 Closing open PR #$PR_NUM"
+              gh pr close "$PR_NUM" --comment "Closed automatically in favor of newer PR #$PR_NUMBER."
+            else
+              echo "ℹ️ Skipping PR #$PR_NUM (state: $PR_STATE)"
+            fi
           done
 
       - name: Reopen existing PR if closed
