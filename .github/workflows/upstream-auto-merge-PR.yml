@@ -2,7 +2,7 @@
 # Security: Auto-merging from forks is risky. Keep allowForks: false unless you're handling validations elsewhere.
 # Bot Access: GITHUB_TOKEN has limited access; for advanced workflows (e.g., repo in orgs), use a fine-grained PAT.
 
-name: Auto Merge PRs
+name: upstream-auto-merge-PR
 
 on:
   pull_request_target:

@@ -1,5 +1,5 @@
-name: auto-create-branch-pull-request-for-upstream
-# test5
+name: fork-auto-create-pull-request-on-upstream
+
 on:
   push:
     branches:

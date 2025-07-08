@@ -1,5 +1,5 @@
-name: sync-fork-with-upstream
-# test3
+name: fork-sync-with-upstream
+
 on:
   schedule:
     - cron: '0 * * * *'  # Runs every hour
