@@ -80,13 +80,15 @@ jobs:
               exit 0
             fi
           fi
-
-      - name: Check for existing PR
+          
+      - name: Check for existing PRs
         id: find-pr
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          gh pr list --head "$BRANCH_NAME" --state all --json number,state,title,updatedAt \
-            | jq -s 'sort_by(.updatedAt) | reverse' > prlist.json
+
+          echo "📥 Fetching PRs for branch: $BRANCH_NAME"
+          gh pr list --head "$BRANCH_NAME" --state all --json number,state,updatedAt \
+            | jq 'sort_by(.updatedAt) | reverse' > prlist.json
 
           PR_NUMBER=$(jq -r '.[0].number // empty' prlist.json)
           PR_STATE=$(jq -r '.[0].state // empty' prlist.json)
@@ -97,10 +99,11 @@ jobs:
       - name: Close older PRs from same branch
         if: env.PR_NUMBER != ''
         run: |
-          echo "🧹 Closing older PRs from the same branch (excluding latest)"
-          jq -c '.[1:]' prlist.json | jq -r '.[].number' | while read -r OLD_PR; do
+          echo "🧹 Closing older PRs from the same branch (excluding most recent: #$PR_NUMBER)"
+
+          jq '.[1:] | .[] | .number' prlist.json | while read -r OLD_PR; do
             echo "🛑 Closing old PR #$OLD_PR"
-            gh pr close "$OLD_PR" --comment "Closed in favor of newer PR."
+            gh pr close "$OLD_PR" --comment "Closed automatically in favor of newer PR #$PR_NUMBER."
           done
 
       - name: Reopen existing PR if closed
