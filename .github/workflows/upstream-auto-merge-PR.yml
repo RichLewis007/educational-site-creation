@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "PR number to test merge logic manually"
+        description: "Optional PR number to manually merge (for testing only)"
         required: false
 
 jobs:
@@ -33,43 +33,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Determine PR number
-        id: determine-pr
+      - name: Show context info
         run: |
-          if [ -n "${{ github.event.pull_request.number }}" ]; then
-            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-            echo "🧠 Using PR number from event: ${{ github.event.pull_request.number }}"
-          elif [ -n "${{ inputs.pr_number }}" ]; then
-            echo "PR_NUMBER=${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
-            echo "🧪 Using PR number from workflow_dispatch input: ${{ inputs.pr_number }}"
-          else
-            echo "❌ No PR number found in event or inputs. Skipping."
-            exit 0
-          fi
+          echo "🔧 Event name: ${{ github.event_name }}"
+          echo "🔢 PR number from event: ${{ github.event.pull_request.number }}"
+          echo "🔢 PR number from input: ${{ inputs.pr_number }}"
 
-      - name: Debug Show PR details
+      - name: View PR details (if pull_request_target)
+        if: github.event_name == 'pull_request_target'
         run: |
-          echo "🔍 Viewing PR #${{ steps.determine-pr.outputs.PR_NUMBER }}"
-          gh pr view ${{ steps.determine-pr.outputs.PR_NUMBER }} \
+          gh pr view ${{ github.event.pull_request.number }} \
             --json number,title,state,mergeable,headRefName,baseRefName,author,labels,isCrossRepository \
             --jq '.'
         env:
           GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
 
-      - name: Try manual merge by PR number
-        if: github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
-        run: |
-          echo "🔢 Attempting to merge PR #${{ inputs.pr_number }}"
-          
-          gh pr merge ${{ inputs.pr_number }} \
-            --squash \
-            --delete-branch \
-            --subject "Auto-merged PR #${{ inputs.pr_number }}" \
-            --body "Auto-merged via manual workflow_dispatch trigger"
-        env:
-          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
-
-      - name: Auto-merge PR
+      - name: Auto-merge PR (event-triggered)
+        if: github.event_name == 'pull_request_target'
         uses: pascalgn/automerge-action@v0.15.6
         env:
           GITHUB_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
@@ -79,4 +59,21 @@ jobs:
           AUTHOR_EMAIL: bot@github.com
           REQUIRED_LABELS: automerge
           BLOCKING_LABELS: do-not-merge
-          ALLOW_FORKS: true  # ⚠️ Set to false if you want to block fork-based merges
+          ALLOW_FORKS: true
+
+      - name: Manually merge PR (if workflow_dispatch)
+        if: github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
+        run: |
+          echo "🔁 Attempting manual merge of PR #${{ inputs.pr_number }}"
+
+          gh pr view ${{ inputs.pr_number }} \
+            --json number,title,state,mergeable,labels \
+            --jq '.'
+
+          gh pr merge ${{ inputs.pr_number }} \
+            --squash \
+            --delete-branch \
+            --subject "Auto-merged PR #${{ inputs.pr_number }}" \
+            --body "Manually triggered merge via workflow_dispatch"
+        env:
+          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
