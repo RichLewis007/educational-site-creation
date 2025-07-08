@@ -22,17 +22,26 @@ jobs:
     needs: precheck
     if: ${{ github.repository_owner == 'RichLewis007' }}
     runs-on: ubuntu-latest
-
+    env:
+      GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
+      
     steps:
-      - name: Show auth status
-        run: gh auth status
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN4 }}
+      - name: Confirm GH_TOKEN is set
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ GH_TOKEN is missing. Please set the secret correctly."
+            exit 1
+          else
+            echo "✅ GH_TOKEN appears to be set."
+          fi
 
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          persist-credentials: false
+        # with:
+        #  persist-credentials: false
+
+      - name: Show auth status
+        run: gh auth status
 
       - name: Set up Git
         run: |
@@ -50,7 +59,5 @@ jobs:
           git merge upstream/main --no-edit || echo "Already up to date"
 
       - name: Push changes back to origin
-        env:
-          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
         run: |
           git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} main
