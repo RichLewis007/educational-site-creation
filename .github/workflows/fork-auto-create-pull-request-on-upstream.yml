@@ -20,7 +20,8 @@ jobs:
             echo "✅ Proceeding in fork"
           else
             echo "is-fork=false" >> "$GITHUB_OUTPUT"
-            echo "🚫 Skipping: Not the fork"
+            echo "⛔ Exiting: This workflow is only for the fork."
+            exit 0
           fi
 
   create-pr:
