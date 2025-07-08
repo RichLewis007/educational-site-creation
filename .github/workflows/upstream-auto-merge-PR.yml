@@ -57,7 +57,7 @@ jobs:
           MERGE_COMMIT_MESSAGE: pull-request-title
           AUTHOR_EMAIL: bot@github.com
           AUTHOR_NAME: Auto Merge Bot
-          ALLOW_FORKS: false # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
+          ALLOW_FORKS: true # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
           REVIEWERS: '' # No reviewers required
           BLOCKING_LABELS: do-not-merge
           REQUIRED_LABELS: automerge
