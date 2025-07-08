@@ -33,47 +33,64 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Show context info
+      - name: Determine PR number
+        id: pr
         run: |
-          echo "🔧 Event name: ${{ github.event_name }}"
-          echo "🔢 PR number from event: ${{ github.event.pull_request.number }}"
-          echo "🔢 PR number from input: ${{ inputs.pr_number }}"
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ inputs.pr_number }}" ]; then
+            echo "PR_NUMBER=${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ No PR number found. Exiting."
+            exit 0
+          fi
 
-      - name: View PR details (if pull_request_target)
-        if: github.event_name == 'pull_request_target'
+      - name: Evaluate and auto-merge PR
         run: |
-          gh pr view ${{ github.event.pull_request.number }} \
-            --json number,title,state,mergeable,headRefName,baseRefName,author,labels,isCrossRepository \
-            --jq '.'
-        env:
-          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+          PR_NUM="${{ steps.pr.outputs.PR_NUMBER }}"
+          echo "🔍 Evaluating PR #$PR_NUM"
 
-      - name: Auto-merge PR (event-triggered)
-        if: github.event_name == 'pull_request_target'
-        uses: pascalgn/automerge-action@v0.15.6
-        env:
-          GITHUB_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
-          MERGE_METHOD: squash
-          MERGE_COMMIT_MESSAGE: pull-request-title
-          AUTHOR_NAME: Auto Merge Bot
-          AUTHOR_EMAIL: bot@github.com
-          REQUIRED_LABELS: automerge
-          BLOCKING_LABELS: do-not-merge
-          ALLOW_FORKS: true
+          PR_JSON=$(gh pr view "$PR_NUM" \
+            --json number,title,state,mergeable,labels,isCrossRepository \
+            --jq '.')
 
-      - name: Manually merge PR (if workflow_dispatch)
-        if: github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
-        run: |
-          echo "🔁 Attempting manual merge of PR #${{ inputs.pr_number }}"
+          echo "$PR_JSON" | jq '.'
 
-          gh pr view ${{ inputs.pr_number }} \
-            --json number,title,state,mergeable,labels \
-            --jq '.'
+          MERGEABLE=$(echo "$PR_JSON" | jq -r '.mergeable')
+          STATE=$(echo "$PR_JSON" | jq -r '.state')
+          LABELS=$(echo "$PR_JSON" | jq -r '[.labels[].name] | join(", ")')
+          IS_FORK=$(echo "$PR_JSON" | jq -r '.isCrossRepository')
 
-          gh pr merge ${{ inputs.pr_number }} \
+          echo "📄 State: $STATE"
+          echo "📎 Labels: $LABELS"
+          echo "🔀 Mergeable: $MERGEABLE"
+          echo "🔗 From fork: $IS_FORK"
+
+          if [[ "$STATE" != "OPEN" ]]; then
+            echo "❌ PR is not open. Skipping."
+            exit 0
+          fi
+
+          if [[ "$LABELS" != *"automerge"* ]]; then
+            echo "❌ PR does not have 'automerge' label. Skipping."
+            exit 0
+          fi
+
+          if [[ "$LABELS" == *"do-not-merge"* ]]; then
+            echo "❌ PR has 'do-not-merge' label. Skipping."
+            exit 0
+          fi
+
+          if [[ "$MERGEABLE" != "MERGEABLE" ]]; then
+            echo "❌ PR is not currently mergeable (status: $MERGEABLE). Skipping."
+            exit 0
+          fi
+
+          echo "✅ All conditions met. Proceeding to merge..."
+          gh pr merge "$PR_NUM" \
             --squash \
             --delete-branch \
-            --subject "Auto-merged PR #${{ inputs.pr_number }}" \
-            --body "Manually triggered merge via workflow_dispatch"
+            --subject "Auto-merged PR #$PR_NUM" \
+            --body "✅ Auto-merged because all merge conditions were met."
         env:
           GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
