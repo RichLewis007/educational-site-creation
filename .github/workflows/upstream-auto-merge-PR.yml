@@ -47,7 +47,7 @@ jobs:
             exit 0
           fi
 
-      - name: Debug: Show PR details
+      - name: Debug Show PR details
         run: |
           echo "🔍 Viewing PR #${{ steps.determine-pr.outputs.PR_NUMBER }}"
           gh pr view ${{ steps.determine-pr.outputs.PR_NUMBER }} \
