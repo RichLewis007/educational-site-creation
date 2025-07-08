@@ -86,15 +86,15 @@ jobs:
       - name: Create Pull Request
         run: |
           # prevent running in upstream
-          if [ env.GH_TOKEN != '' ]; then
-            BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-            echo "📬 Creating PR for: $BRANCH_NAME"
-            gh auth status
-            gh pr create \
-              --title "Automated Pull Request: $BRANCH_NAME" \
-              --body "Automated Pull Request from ${{ github.repository_owner }} branch $BRANCH_NAME." \
-              --label "automerge" \ 
-              --base main \
-              --head "${{ github.repository_owner }}:$BRANCH_NAME" \
-              --repo MakerFriends/educational-site-creation || echo "ℹ️ PR already exists or failed silently"
-          fi
+          # if [ env.GH_TOKEN != '' ]; then
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "📬 Creating PR for: $BRANCH_NAME"
+          gh auth status
+          gh pr create \
+            --title "Automated Pull Request: $BRANCH_NAME" \
+            --body "Automated Pull Request from ${{ github.repository_owner }} branch $BRANCH_NAME." \
+            --label "automerge" \ 
+            --base main \
+            --head "${{ github.repository_owner }}:$BRANCH_NAME" \
+            --repo MakerFriends/educational-site-creation || echo "ℹ️ PR already exists or failed silently"
+          #fi
