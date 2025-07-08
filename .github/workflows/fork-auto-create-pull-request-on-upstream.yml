@@ -1,3 +1,16 @@
+# High-Level Logic:
+#    Only runs if the push occurs in your fork (github.repository_owner == 'RichLewis007')
+#    Skips the action if the push is to one of the excluded branches: gh-pages, sync-fork
+#    For every valid branch push, it:
+#        Fetches from upstream (the original MakerFriends repo)
+#        Checks if a PR is needed (by comparing commits or branch name)
+#        Finds existing PRs for that branch
+#        Closes older PRs (leaving only one open PR per branch)
+#        Reopens a closed PR if it exists
+#        Creates a new PR if none exists
+#        changes to main are being ignored
+#    PRs are opened against MakerFriends/educational-site-creation:main
+
 name: fork-auto-create-pull-request-on-upstream
 
 on:
@@ -53,13 +66,15 @@ jobs:
       - name: Show auth status
         run: gh auth status
 
-      - name: Add upstream remote
-        run: git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
-
-      - name: Check if PR should be created
+      - name: Skip if branch is excluded
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           echo "🌿 Branch: $BRANCH_NAME"
+
+          if [[ "$BRANCH_NAME" == "main" ]]; then
+            echo "🚫 Skipping PR creation for branch: main"
+            exit 0
+          fi
 
           IGNORE_BRANCHES=("gh-pages" "sync-fork")
           for IGNORE in "${IGNORE_BRANCHES[@]}"; do
@@ -69,18 +84,6 @@ jobs:
             fi
           done
 
-          git fetch origin
-          git fetch upstream
-
-          if [ "$BRANCH_NAME" == "main" ]; then
-            COUNT=$(git rev-list --count remotes/upstream/main..remotes/origin/main)
-            echo "🔍 Commits to PR: $COUNT"
-            if [ "$COUNT" -eq 0 ]; then
-              echo "✅ No changes to PR — exiting"
-              exit 0
-            fi
-          fi
-          
       - name: Check for existing PRs
         id: find-pr
         run: |
@@ -104,7 +107,7 @@ jobs:
           jq -c '.[1:][]' prlist.json | while read -r pr; do
             PR_NUM=$(echo "$pr" | jq -r '.number')
             PR_STATE=$(echo "$pr" | jq -r '.state')
-          
+
             if [[ "$PR_STATE" == "OPEN" ]]; then
               echo "🛑 Closing open PR #$PR_NUM"
               gh pr close "$PR_NUM" --comment "Closed automatically in favor of newer PR #$PR_NUMBER."
@@ -132,4 +135,3 @@ jobs:
             --base main \
             --head "${{ github.repository_owner }}:$BRANCH_NAME" \
             --repo MakerFriends/educational-site-creation
-
