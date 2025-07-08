@@ -9,6 +9,15 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}  # Map your custom token to GH_TOKEN
     steps:
+      - name: Confirm GH_TOKEN is set
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ GH_TOKEN is missing. Please set the secret correctly."
+            exit 1
+          else
+            echo "✅ GH_TOKEN appears to be set."
+          fi
+          
       - name: Check GitHub CLI version
         run: gh --version
 
