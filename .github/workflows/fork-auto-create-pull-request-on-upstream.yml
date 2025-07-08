@@ -3,7 +3,7 @@ name: fork-auto-create-pull-request-on-upstream
 on:
   push:
     branches:
-      - '**'  # All branches
+      - '**'
 
 jobs:
   precheck:
@@ -16,10 +16,10 @@ jobs:
         run: |
           echo "🧠 Repo: ${{ github.repository }}"
           if [ "${{ github.repository_owner }}" == "RichLewis007" ]; then
-            echo "is-fork=true" >> $GITHUB_OUTPUT
+            echo "is-fork=true" >> "$GITHUB_OUTPUT"
             echo "✅ Proceeding in fork"
           else
-            echo "is-fork=false" >> $GITHUB_OUTPUT
+            echo "is-fork=false" >> "$GITHUB_OUTPUT"
             echo "🚫 Skipping: Not the fork"
           fi
 
@@ -27,9 +27,10 @@ jobs:
     needs: precheck
     if: needs.precheck.outputs.is-fork == 'true'
     runs-on: ubuntu-latest
+
     env:
       GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
-      
+
     steps:
       - name: Confirm GH_TOKEN is set
         run: |
@@ -40,26 +41,21 @@ jobs:
             echo "✅ GH_TOKEN appears to be set."
           fi
 
-  
-
-
-
       - name: Install GitHub CLI
         run: |
           sudo apt update
-          sudo apt install -y gh
-       
+          sudo apt install -y gh jq
+
       - name: Checkout repo
-        uses: actions/checkout@v4  
+        uses: actions/checkout@v4
 
       - name: Show auth status
         run: gh auth status
-        
+
       - name: Add upstream remote
         run: git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
 
-      - name: Check if Pull Request is needed
-        id: check-pr
+      - name: Check if PR should be created
         run: |
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
           echo "🌿 Branch: $BRANCH_NAME"
@@ -82,21 +78,42 @@ jobs:
               echo "✅ No changes to PR — exiting"
               exit 0
             fi
-            git log remotes/upstream/main..remotes/origin/main --oneline
           fi
 
-      - name: Create Pull Request
+      - name: Check for existing PR
+        id: find-pr
         run: |
-          # prevent running in upstream
-          # if [ env.GH_TOKEN != '' ]; then
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          #echo "📬 Creating PR for: $BRANCH_NAME"
-          #gh auth status
+          gh pr list --head "$BRANCH_NAME" --state all --json number,state,title,updatedAt \
+            | jq -s 'sort_by(.updatedAt) | reverse' > prlist.json
+
+          PR_NUMBER=$(jq -r '.[0].number // empty' prlist.json)
+          PR_STATE=$(jq -r '.[0].state // empty' prlist.json)
+
+          echo "PR_NUMBER=$PR_NUMBER" >> "$GITHUB_ENV"
+          echo "PR_STATE=$PR_STATE" >> "$GITHUB_ENV"
+
+      - name: Close older PRs from same branch
+        if: env.PR_NUMBER != ''
+        run: |
+          echo "🧹 Closing older PRs from the same branch (excluding latest)"
+          jq -c '.[1:]' prlist.json | jq -r '.[].number' | while read -r OLD_PR; do
+            echo "🛑 Closing old PR #$OLD_PR"
+            gh pr close "$OLD_PR" --comment "Closed in favor of newer PR."
+          done
+
+      - name: Reopen existing PR if closed
+        if: env.PR_STATE == 'CLOSED'
+        run: |
+          echo "♻️ Reopening previously closed PR #$PR_NUMBER"
+          gh pr reopen "$PR_NUMBER"
+          gh pr comment "$PR_NUMBER" --body "🔁 Reopened automatically due to new push to branch."
+
+      - name: Create new PR if none found
+        if: env.PR_NUMBER == ''
+        run: |
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          echo "📬 Creating new PR for: $BRANCH_NAME"
           gh pr create \
             --title "Automated Pull Request: $BRANCH_NAME" \
-            --body "Automated Pull Request from ${{ github.repository_owner }} branch $BRANCH_NAME." \
-            --label "automerge" \ 
-            --base main \
-            --head "${{ github.repository_owner }}:$BRANCH_NAME" \
-            --repo MakerFriends/educational-site-creation || echo "ℹ️ PR already exists or failed silently"
-          #fi
+            --body "Automated Pull Req
