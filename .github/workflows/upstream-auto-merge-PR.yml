@@ -1,63 +1,63 @@
-# Tests: This workflow assumes your CI passes. Add "statusChecks" if you want to wait for specific checks to pass.
-# Security: Auto-merging from forks is risky. Keep allowForks: false unless you're handling validations elsewhere.
-# Bot Access: GITHUB_TOKEN has limited access; for advanced workflows (e.g., repo in orgs), use a fine-grained PAT.
+# # Tests: This workflow assumes your CI passes. Add "statusChecks" if you want to wait for specific checks to pass.
+# # Security: Auto-merging from forks is risky. Keep allowForks: false unless you're handling validations elsewhere.
+# # Bot Access: GITHUB_TOKEN has limited access; for advanced workflows (e.g., repo in orgs), use a fine-grained PAT.
 
-name: upstream-auto-merge-PR
+# name: upstream-auto-merge-PR
 
-on:
-  pull_request_target:
-    types: [opened, synchronize, reopened]
+# on:
+#   pull_request_target:
+#     types: [opened, synchronize, reopened]
     
-  workflow_dispatch:  # Allow manual triggering
+#   workflow_dispatch:  # Allow manual triggering
 
-jobs:
-  auto-merge:
-    runs-on: ubuntu-latest
-    env:
-      GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+# jobs:
+#   auto-merge:
+#     runs-on: ubuntu-latest
+#     env:
+#       GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
     
-    # env:
-    #   OWNER: ${{ github.repository_owner }}
-    # run: echo ${{ github.repository_owner }}
-    # Prevents execution in forks or untrusted repositories
-    # if: "$OWNER" == "MakerFriends"
+#     # env:
+#     #   OWNER: ${{ github.repository_owner }}
+#     # run: echo ${{ github.repository_owner }}
+#     # Prevents execution in forks or untrusted repositories
+#     # if: "$OWNER" == "MakerFriends"
 
-    permissions:
-      pull-requests: write
-      contents: write
+#     permissions:
+#       pull-requests: write
+#       contents: write
 
-    steps:
-      - name: Confirm GH_TOKEN is set
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "❌ GH_TOKEN is missing. Please set the secret correctly."
-            exit 1
-          else
-            echo "✅ GH_TOKEN appears to be set."
-          fi
+#     steps:
+#       - name: Confirm GH_TOKEN is set
+#         run: |
+#           if [ -z "$GH_TOKEN" ]; then
+#             echo "❌ GH_TOKEN is missing. Please set the secret correctly."
+#             exit 1
+#           else
+#             echo "✅ GH_TOKEN appears to be set."
+#           fi
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
+#       - name: Checkout repository
+#         uses: actions/checkout@v4
         
-      - name: Show auth status
-        run: gh auth status
-        env:
-          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}   
+#       - name: Show auth status
+#         run: gh auth status
+#         env:
+#           GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}   
           
-      - name: Show repo owner
-        env:
-          OWNER: ${{ github.repository_owner }}
-        run: echo "$OWNER"
+#       - name: Show repo owner
+#         env:
+#           OWNER: ${{ github.repository_owner }}
+#         run: echo "$OWNER"
         
-      - name: Auto-merge PRs from trusted sources
-        uses: pascalgn/automerge-action@v0.15.6
-        env:
-          GITHUB_TOKEN : ${{ secrets.UPSTREAM_GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
-          MERGE_METHOD: squash
-          MERGE_COMMIT_MESSAGE: pull-request-title
-          AUTHOR_EMAIL: bot@github.com
-          AUTHOR_NAME: Auto Merge Bot
-          ALLOW_FORKS: false # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
-          REVIEWERS: '' # No reviewers required
-          BLOCKING_LABELS: do-not-merge
-          REQUIRED_LABELS: automerge
+#       - name: Auto-merge PRs from trusted sources
+#         uses: pascalgn/automerge-action@v0.15.6
+#         env:
+#           GITHUB_TOKEN : ${{ secrets.UPSTREAM_GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
+#           MERGE_METHOD: squash
+#           MERGE_COMMIT_MESSAGE: pull-request-title
+#           AUTHOR_EMAIL: bot@github.com
+#           AUTHOR_NAME: Auto Merge Bot
+#           ALLOW_FORKS: false # ⚠️ Strongly recommended: disallow fork merges unless you handle validation
+#           REVIEWERS: '' # No reviewers required
+#           BLOCKING_LABELS: do-not-merge
+#           REQUIRED_LABELS: automerge
