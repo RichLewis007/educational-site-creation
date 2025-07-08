@@ -1,25 +1,17 @@
-name: GH Token Test
+name: 🔐 GH Token Test
 
 on:
-  workflow_dispatch:  # Allows manual trigger
+  workflow_dispatch:
 
 jobs:
   test-gh-auth:
     runs-on: ubuntu-latest
     env:
-      GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}  # Map your custom token to GH_TOKEN
+      GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
     steps:
-      - name: Confirm GH_TOKEN is set
-        env:
-          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
-        run: |
-          if [ -z "$GH_TOKEN" ]; then
-            echo "❌ GH_TOKEN is missing. Please set the secret correctly."
-            exit 1
-          else
-            echo "✅ GH_TOKEN appears to be set."
-          fi
-          
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Check GitHub CLI version
         run: gh --version
 
