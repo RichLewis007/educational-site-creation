@@ -24,6 +24,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Confirm GH_TOKEN is set
+        env:
+          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}      
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ GH_TOKEN is missing. Please set the secret correctly."
+            exit 1
+          else
+            echo "✅ GH_TOKEN appears to be set."
+          fi
       - name: Show auth status
         run: gh auth status
         env:
