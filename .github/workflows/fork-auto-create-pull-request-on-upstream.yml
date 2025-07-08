@@ -40,19 +40,21 @@ jobs:
             echo "✅ GH_TOKEN appears to be set."
           fi
 
-      - name: Checkout repo
-        uses: actions/checkout@v4    
+  
 
-      - name: Show auth status
-        env:
-          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
-        run: gh auth status
+
 
       - name: Install GitHub CLI
         run: |
           sudo apt update
           sudo apt install -y gh
+       
+      - name: Checkout repo
+        uses: actions/checkout@v4  
 
+      - name: Show auth status
+        run: gh auth status
+        
       - name: Add upstream remote
         run: git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
 
@@ -88,8 +90,8 @@ jobs:
           # prevent running in upstream
           # if [ env.GH_TOKEN != '' ]; then
           BRANCH_NAME="${GITHUB_REF#refs/heads/}"
-          echo "📬 Creating PR for: $BRANCH_NAME"
-          gh auth status
+          #echo "📬 Creating PR for: $BRANCH_NAME"
+          #gh auth status
           gh pr create \
             --title "Automated Pull Request: $BRANCH_NAME" \
             --body "Automated Pull Request from ${{ github.repository_owner }} branch $BRANCH_NAME." \
