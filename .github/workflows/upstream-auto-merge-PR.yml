@@ -56,6 +56,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
 
+      - name: Try manual merge by PR number
+        if: github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
+        run: |
+          echo "🔢 Attempting to merge PR #${{ inputs.pr_number }}"
+          
+          gh pr merge ${{ inputs.pr_number }} \
+            --squash \
+            --delete-branch \
+            --subject "Auto-merged PR #${{ inputs.pr_number }}" \
+            --body "Auto-merged via manual workflow_dispatch trigger"
+        env:
+          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+
       - name: Auto-merge PR
         uses: pascalgn/automerge-action@v0.15.6
         env:
