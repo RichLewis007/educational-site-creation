@@ -10,16 +10,30 @@ on:
         description: "Optional PR number to manually merge (leave blank to process all PRs)"
         required: false
 
+# Immediately cancel workflow if this is not the upstream repo
 jobs:
-  auto-merge:
+  precheck:
     runs-on: ubuntu-latest
+    steps:
+      - name: Cancel if not running in upstream repo
+        run: |
+          echo "🔍 Running in repo: ${{ github.repository }}"
+          if [ "${{ github.repository_owner }}" != "MakerFriends" ]; then
+            echo "⛔ Exiting: This workflow is only for the upstream repo."
+            exit 0
+          fi
+
+  auto-merge:
+    needs: precheck
+    if: ${{ github.repository_owner == 'MakerFriends' }}
+    runs-on: ubuntu-latest
+    
+    env:
+      GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
 
     permissions:
       pull-requests: write
       contents: write
-
-    env:
-      GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
 
     steps:
       - name: Confirm GH_TOKEN is set
