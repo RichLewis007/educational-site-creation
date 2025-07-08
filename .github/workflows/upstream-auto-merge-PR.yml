@@ -1,8 +1,8 @@
+name: upstream-auto-merge-PR
+
 # Tests: This workflow assumes your CI passes. Add "statusChecks" if you want to wait for specific checks to pass.
 # Security: Auto-merging from forks is risky. Keep allowForks: false unless you're handling validations elsewhere.
 # Bot Access: GITHUB_TOKEN has limited access; for advanced workflows (e.g., repo in orgs), use a fine-grained PAT.
-
-name: upstream-auto-merge-PR
 
 on:
   pull_request_target:
@@ -41,18 +41,23 @@ jobs:
         
       - name: Show auth status
         run: gh auth status
-        env:
-          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}   
           
       - name: Show repo owner
         env:
           OWNER: ${{ github.repository_owner }}
         run: echo "$OWNER"
-        
+
+      - name: Print PR details
+        run: |
+          gh pr view ${{ github.event.pull_request.number }} \
+            --json mergeable,state,title,headRefName,baseRefName,labels \
+            --jq '.'
+
       - name: Auto-merge PRs from trusted sources
         uses: pascalgn/automerge-action@v0.15.6
         env:
-          GITHUB_TOKEN : ${{ secrets.UPSTREAM_GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
+          GITHUB_TOKEN : "$GH_TOKEN" 
+          # ${{ secrets.UPSTREAM_GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
           MERGE_METHOD: squash
           MERGE_COMMIT_MESSAGE: pull-request-title
           AUTHOR_EMAIL: bot@github.com
