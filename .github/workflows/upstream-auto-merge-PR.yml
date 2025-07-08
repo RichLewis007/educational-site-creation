@@ -13,6 +13,8 @@ on:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
     
     # env:
     #   OWNER: ${{ github.repository_owner }}
@@ -25,14 +27,28 @@ jobs:
       contents: write
 
     steps:
+      - name: Confirm GH_TOKEN is set
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ GH_TOKEN is missing. Please set the secret correctly."
+            exit 1
+          else
+            echo "✅ GH_TOKEN appears to be set."
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Show auth status
         run: gh auth status
         env:
-          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}    
+          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}   
+          
       - name: Show repo owner
         env:
           OWNER: ${{ github.repository_owner }}
         run: echo "$OWNER"
+        
       - name: Auto-merge PRs from trusted sources
         uses: pascalgn/automerge-action@v0.15.6
         env:
