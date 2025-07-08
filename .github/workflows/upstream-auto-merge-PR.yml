@@ -54,7 +54,7 @@ jobs:
           OWNER: ${{ github.repository_owner }}
         run: echo "$OWNER"
 
-      - name: Debug: Print PR details
+      - name: Debug Print PR details
         run: |
           echo "🔎 PR Number: ${{ github.event.pull_request.number }}"
           gh pr view ${{ github.event.pull_request.number }} \
