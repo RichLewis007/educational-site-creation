@@ -41,17 +41,28 @@ jobs:
         
       - name: Show auth status
         run: gh auth status
+
+      - name: Debug: PR context
+        run: |
+          echo "🔗 Repo: $GITHUB_REPOSITORY"
+          echo "🔢 PR #: ${{ github.event.pull_request.number }}"
+          echo "🔤 Head: ${{ github.event.pull_request.head.ref }}"
+          echo "🧬 Base: ${{ github.event.pull_request.base.ref }}"
           
       - name: Show repo owner
         env:
           OWNER: ${{ github.repository_owner }}
         run: echo "$OWNER"
 
-      - name: Print PR details
+      - name: Debug: Print PR details
         run: |
+          echo "🔎 PR Number: ${{ github.event.pull_request.number }}"
           gh pr view ${{ github.event.pull_request.number }} \
             --json mergeable,state,title,headRefName,baseRefName,labels \
             --jq '.'
+        env:
+          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+
 
       - name: Auto-merge PRs from trusted sources
         uses: pascalgn/automerge-action@v0.15.6
