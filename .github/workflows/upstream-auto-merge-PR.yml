@@ -42,7 +42,7 @@ jobs:
       - name: Show auth status
         run: gh auth status
 
-      - name: Debug: PR context
+      - name: Debug PR context
         run: |
           echo "🔗 Repo: $GITHUB_REPOSITORY"
           echo "🔢 PR #: ${{ github.event.pull_request.number }}"
