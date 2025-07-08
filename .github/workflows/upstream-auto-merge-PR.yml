@@ -25,6 +25,10 @@ jobs:
       contents: write
 
     steps:
+      - name: Show auth status
+        run: gh auth status
+        env:
+          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}    
       - name: Show repo owner
         env:
           OWNER: ${{ github.repository_owner }}
@@ -32,7 +36,7 @@ jobs:
       - name: Auto-merge PRs from trusted sources
         uses: pascalgn/automerge-action@v0.15.6
         env:
-          GITHUB_TOKEN : ${{ secrets.UPSTREAM_GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
+          GH_TOKEN : ${{ secrets.UPSTREAM_GH_TOKEN }}  # Or secrets.GITHUB_TOKEN
           MERGE_METHOD: squash
           MERGE_COMMIT_MESSAGE: pull-request-title
           AUTHOR_EMAIL: bot@github.com

@@ -24,6 +24,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Show auth status
+        run: gh auth status
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN4 }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -46,6 +51,6 @@ jobs:
 
       - name: Push changes back to origin
         env:
-          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN3 }}
+          GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
         run: |
           git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} main
