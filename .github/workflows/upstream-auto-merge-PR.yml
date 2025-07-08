@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       pr_number:
-        description: "Optional PR number to manually merge (for testing only)"
+        description: "Optional PR number to manually merge (leave blank to process all PRs)"
         required: false
 
 jobs:
@@ -33,64 +33,74 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Determine PR number
-        id: pr
+      - name: Determine PRs to process
+        id: gather
         run: |
-          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
-            echo "PR_NUMBER=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ inputs.pr_number }}" ]; then
-            echo "PR_NUMBER=${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+          if [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
+            echo "PR_LIST=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.pr_number }}" ]]; then
+            echo "PR_LIST=${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
           else
-            echo "❌ No PR number found. Exiting."
-            exit 0
+            echo "🔍 Gathering all open PRs labeled 'automerge'..."
+            gh pr list --state open --json number,labels \
+              --jq '[.[] | select(.labels[].name == "automerge") | .number]' > pr_numbers.json
+
+            PR_LIST=$(jq -r '. | join(" ")' pr_numbers.json)
+            if [[ -z "$PR_LIST" ]]; then
+              echo "❌ No PRs found with 'automerge' label. Exiting."
+              exit 0
+            fi
+            echo "Found PRs: $PR_LIST"
+            echo "PR_LIST=$PR_LIST" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Evaluate and auto-merge PR
+      - name: Process PRs
         run: |
-          PR_NUM="${{ steps.pr.outputs.PR_NUMBER }}"
-          echo "🔍 Evaluating PR #$PR_NUM"
+          for PR_NUM in ${{ steps.gather.outputs.PR_LIST }}; do
+            echo "🔍 Evaluating PR #$PR_NUM"
+            PR_JSON=$(gh pr view "$PR_NUM" --json number,title,state,mergeable,labels,isCrossRepository --jq '.')
 
-          PR_JSON=$(gh pr view "$PR_NUM" \
-            --json number,title,state,mergeable,labels,isCrossRepository \
-            --jq '.')
+            echo "$PR_JSON" | jq '.'
+            MERGEABLE=$(echo "$PR_JSON" | jq -r '.mergeable')
+            STATE=$(echo "$PR_JSON" | jq -r '.state')
+            LABELS=$(echo "$PR_JSON" | jq -r '[.labels[].name] | join(", ")')
+            IS_FORK=$(echo "$PR_JSON" | jq -r '.isCrossRepository')
 
-          echo "$PR_JSON" | jq '.'
+            echo "📄 State: $STATE"
+            echo "📎 Labels: $LABELS"
+            echo "🔀 Mergeable: $MERGEABLE"
+            echo "🔗 From fork: $IS_FORK"
 
-          MERGEABLE=$(echo "$PR_JSON" | jq -r '.mergeable')
-          STATE=$(echo "$PR_JSON" | jq -r '.state')
-          LABELS=$(echo "$PR_JSON" | jq -r '[.labels[].name] | join(", ")')
-          IS_FORK=$(echo "$PR_JSON" | jq -r '.isCrossRepository')
+            if [[ "$STATE" != "OPEN" ]]; then
+              echo "❌ PR is not open. Skipping."
+              gh pr comment "$PR_NUM" --body "❌ Skipped: PR is not open."
+              continue
+            fi
 
-          echo "📄 State: $STATE"
-          echo "📎 Labels: $LABELS"
-          echo "🔀 Mergeable: $MERGEABLE"
-          echo "🔗 From fork: $IS_FORK"
+            if [[ "$LABELS" != *"automerge"* ]]; then
+              echo "❌ PR is missing 'automerge' label. Skipping."
+              gh pr comment "$PR_NUM" --body "❌ Skipped: Missing required label \`automerge\`."
+              continue
+            fi
 
-          if [[ "$STATE" != "OPEN" ]]; then
-            echo "❌ PR is not open. Skipping."
-            exit 0
-          fi
+            if [[ "$LABELS" == *"do-not-merge"* ]]; then
+              echo "❌ PR has 'do-not-merge' label. Skipping."
+              gh pr comment "$PR_NUM" --body "❌ Skipped: PR has blocking label \`do-not-merge\`."
+              continue
+            fi
 
-          if [[ "$LABELS" != *"automerge"* ]]; then
-            echo "❌ PR does not have 'automerge' label. Skipping."
-            exit 0
-          fi
+            if [[ "$MERGEABLE" != "MERGEABLE" ]]; then
+              echo "❌ PR is not mergeable (status: $MERGEABLE). Skipping."
+              gh pr comment "$PR_NUM" --body "❌ Skipped: PR is not currently mergeable (status: \`$MERGEABLE\`)."
+              continue
+            fi
 
-          if [[ "$LABELS" == *"do-not-merge"* ]]; then
-            echo "❌ PR has 'do-not-merge' label. Skipping."
-            exit 0
-          fi
-
-          if [[ "$MERGEABLE" != "MERGEABLE" ]]; then
-            echo "❌ PR is not currently mergeable (status: $MERGEABLE). Skipping."
-            exit 0
-          fi
-
-          echo "✅ All conditions met. Proceeding to merge..."
-          gh pr merge "$PR_NUM" \
-            --squash \
-            --delete-branch \
-            --subject "Auto-merged PR #$PR_NUM" \
-            --body "✅ Auto-merged because all merge conditions were met."
+            echo "✅ All conditions met. Merging PR #$PR_NUM..."
+            gh pr merge "$PR_NUM" \
+              --squash \
+              --delete-branch \
+              --subject "Auto-merged PR #$PR_NUM" \
+              --body "✅ Auto-merged because all conditions were met."
+          done
         env:
           GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
