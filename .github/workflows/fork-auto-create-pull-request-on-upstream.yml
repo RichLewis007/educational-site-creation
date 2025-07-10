@@ -131,7 +131,7 @@ jobs:
           gh pr create \
             --title "Pull Request for $BRANCH_NAME" \
             --body "This PR updates this file per instructions from the instructor.\n\nIt is from ${{ github.repository_owner }} for the branch $BRANCH_NAME." \
-            --label "automerge", "documentation" \
+            --label "automerge" \
             --reviewer jeff-s \
             --base main \
             --head "${{ github.repository_owner }}:$BRANCH_NAME" \
