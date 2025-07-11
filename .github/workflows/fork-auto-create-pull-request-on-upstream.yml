@@ -135,5 +135,5 @@ jobs:
             --reviewer jeff-s \
             --base main \
             --head "${{ github.repository_owner }}:$BRANCH_NAME" \
-            --repo MakerFriends/educational-site-creation
+            --repo MakerFriends/educational-site-creation \
             --draft
