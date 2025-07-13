@@ -37,14 +37,15 @@ jobs:
       contents: write
 
     steps:
-      - name: Confirm GH_TOKEN is set and authenticate
+      - name: Confirm GH_TOKEN is set and show auth status
         run: |
           if [ -z "$GH_TOKEN" ]; then
             echo "❌ GH_TOKEN is missing. Please set the UPSTREAM_GH_TOKEN secret."
             exit 1
           fi
-          echo "$GH_TOKEN" | gh auth login --with-token
+          echo "✅ GH_TOKEN is set. Checking auth status..."
           gh auth status
+
 
       - name: Determine PRs to process
         id: gather
