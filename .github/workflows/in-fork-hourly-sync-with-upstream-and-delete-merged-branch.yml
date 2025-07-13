@@ -94,38 +94,51 @@ jobs:
           gh auth status
 
       - name: Get all branches in fork (excluding default)
-        id: list-branches
         run: |
-          gh repo set-default RichLewis007/educational-site-creation
-
-          DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef -q '.defaultBranchRef.name')
+          DEFAULT_BRANCH=$(gh repo view RichLewis007/educational-site-creation --json defaultBranchRef -q '.defaultBranchRef.name')
           echo "Default branch is: $DEFAULT_BRANCH"
-
+      
           gh api repos/RichLewis007/educational-site-creation/branches \
             --paginate \
             -q '.[] | .name' > all-branches.txt
-
+      
           grep -v "^$DEFAULT_BRANCH\$" all-branches.txt > fork-branches.txt
+      
+          echo "✅ Found branches to check:"
+          cat fork-branches.txt || echo "(none)"
 
+      # Even though gh pr merge technically supports API-based merging, it still invokes git internally in some situations—especially when trying to delete branches or resolve merge base state.
+      # To safely enable GitHub CLI operations (like gh pr merge) that may call git, you must run actions/checkout, but you can do it in read-only, shallow mode and detached HEAD, like this.
+      - name: Minimal checkout for GH CLI merge compatibility
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ''
+          
       - name: Check for merged PRs, comment with ET timestamp, and delete
         run: |
-          # Use New York timezone for U.S. Eastern Time (accounts for DST)
           TIMESTAMP=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
-
+        
+          if [ ! -s fork-branches.txt ]; then
+            echo "⚠️ No branches found to process. Exiting cleanup."
+            exit 0
+          fi
+        
           while read branch; do
             echo "🔍 Checking for merged PR for branch: $branch"
             pr_number=$(gh pr list --head "$branch" --state merged --json number --jq '.[0].number')
-
+        
             if [ -n "$pr_number" ]; then
               echo "✅ Merged PR found: #$pr_number"
-
+        
               COMMENT="🧹 This branch had a PR which was merged with the upstream repo, so it's being deleted from the forked repo. 🗑️\n\n🕒 Timestamp: $TIMESTAMP\n👤 Ping: @RichLewis007"
               echo "💬 Commenting on PR #$pr_number"
               gh pr comment "$pr_number" --body "$COMMENT"
-
+        
               echo "🗑️ Deleting branch '$branch' from fork..."
               gh api --method DELETE repos/RichLewis007/educational-site-creation/git/refs/heads/"$branch"
             else
               echo "⏩ Branch '$branch' has no merged PR. Skipping."
             fi
           done < fork-branches.txt
+
