@@ -105,6 +105,14 @@ jobs:
           
           grep -v "^$DEFAULT_BRANCH\$" all-branches.txt > fork-branches.txt
 
+      # Even though gh pr merge technically supports API-based merging, it still invokes git internally in some situations—especially when trying to delete branches or resolve merge base state.
+      # To safely enable GitHub CLI operations (like gh pr merge) that may call git, you must run actions/checkout, but you can do it in read-only, shallow mode and detached HEAD, like this.
+      - name: Minimal checkout for GH CLI merge compatibility
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ''
+          
       - name: Check for merged PRs, comment with ET timestamp, and delete
         run: |
           # Use New York timezone for U.S. Eastern Time (accounts for DST)
