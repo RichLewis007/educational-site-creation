@@ -1,5 +1,5 @@
 name: in-fork-hourly-sync-with-upstream-and-delete-merged-branch
-# by Rich Lewis @RichLewis007
+# by Rich Lewis - @RichLewis007
 
 # Only run these jobs in the Fork, not the Upstream Repo.
 # 1. Sync with upstream (Fetch, Merge upstream/main into origin/main, Push changes back to origin)
