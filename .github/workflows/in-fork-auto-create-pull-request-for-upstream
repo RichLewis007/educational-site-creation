@@ -1,3 +1,6 @@
+name: in-fork-auto-create-pull-request-for-upstream
+by Rich Lewis @RichLewis007
+
 # High-Level Logic:
 #    Only runs if the push occurs in your fork (github.repository_owner == 'RichLewis007')
 #    Skips the action if the push is to one of the excluded branches: gh-pages, sync-fork
@@ -11,14 +14,16 @@
 #        changes to main are being ignored
 #    PRs are opened against MakerFriends/educational-site-creation:main
 
-name: in-fork-auto-create-pull-request-for-upstream
-
 on:
   push:
     branches:
       - '**'
 
 jobs:
+
+  # PRECHECK ==============================================================
+  # Make sure this only runs in the FORKED Repo
+
   precheck:
     runs-on: ubuntu-latest
     outputs:
@@ -36,6 +41,9 @@ jobs:
             echo "⛔ Exiting: This workflow is only for the fork."
             exit 0
           fi
+
+  # CREATE-PR ==============================================================
+  # Create a Pull Request for the newly detected branch for the upstream repo.
 
   create-pr:
     needs: precheck
