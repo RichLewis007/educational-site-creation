@@ -12,7 +12,7 @@ by Rich Lewis - @RichLewis007
 #        Reopens a closed PR if it exists
 #        Creates a new PR if none exists
 #        changes to main are being ignored
-#    PRs are opened against MakerFriends/educational-site-creation:main
+#    PRs are opened against MakerFriends/educational-site-creation:main.
 
 on:
   push:
