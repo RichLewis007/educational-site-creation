@@ -25,12 +25,12 @@ jobs:
           fi
 
   auto-merge:
+    env:
+      GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+    
     needs: precheck
     if: ${{ github.repository_owner == 'MakerFriends' }}
     runs-on: ubuntu-latest
-
-    env:
-      GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
 
     permissions:
       pull-requests: write
