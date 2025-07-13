@@ -1,4 +1,5 @@
-name: upstream-auto-merge-PR
+name: in-upstream-auto-merge-pull-requests
+# By Rich Lewis RichLewis007
 
 on:
   pull_request_target:
@@ -10,8 +11,11 @@ on:
         description: "Optional PR number to manually merge (leave blank to process all PRs)"
         required: false
 
-# Immediately cancel workflow if this is not the upstream repo
 jobs:
+
+  # PRECHECK ===================================================================================
+  # Only run this action if it is in the Upstream repo, not the Fork 
+  
   precheck:
     runs-on: ubuntu-latest
     steps:
@@ -23,6 +27,9 @@ jobs:
             exit 0
           fi
 
+  # AUTO-MERGE =========================================================================
+  # In Settings of this repo, I checked the option to "delete branch after it is merged"
+  
   auto-merge:
     needs: precheck
     if: ${{ github.repository_owner == 'MakerFriends' }}
@@ -68,7 +75,7 @@ jobs:
             echo "PR_LIST=$PR_LIST" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Process PRs
+      - name: Process PRs         
         run: |
           for PR_NUM in ${{ steps.gather.outputs.PR_LIST }}; do
             echo "🔍 Evaluating PR #$PR_NUM"
@@ -116,5 +123,4 @@ jobs:
               --subject "Auto-merged PR #$PR_NUM" \
               --body "✅ Auto-merged because all conditions were met."
           done
-        env:
-          GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+
