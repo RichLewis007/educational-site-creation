@@ -96,15 +96,13 @@ jobs:
       - name: Get all branches in fork (excluding default)
         id: list-branches
         run: |
-          gh repo set-default RichLewis007/educational-site-creation
-
-          DEFAULT_BRANCH=$(gh repo view --json defaultBranchRef -q '.defaultBranchRef.name')
+          DEFAULT_BRANCH=$(gh repo view RichLewis007/educational-site-creation --json defaultBranchRef -q '.defaultBranchRef.name')
           echo "Default branch is: $DEFAULT_BRANCH"
-
+          
           gh api repos/RichLewis007/educational-site-creation/branches \
             --paginate \
             -q '.[] | .name' > all-branches.txt
-
+          
           grep -v "^$DEFAULT_BRANCH\$" all-branches.txt > fork-branches.txt
 
       - name: Check for merged PRs, comment with ET timestamp, and delete
