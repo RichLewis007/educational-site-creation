@@ -11,7 +11,7 @@
 #        changes to main are being ignored
 #    PRs are opened against MakerFriends/educational-site-creation:main
 
-name: fork-auto-create-pull-request-on-upstream
+name: in-fork-auto-create-pull-request-for-upstream
 
 on:
   push:
