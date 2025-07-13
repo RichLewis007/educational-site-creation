@@ -67,6 +67,14 @@ jobs:
             echo "PR_LIST=$PR_LIST" >> "$GITHUB_OUTPUT"
           fi
 
+      # Even though gh pr merge technically supports API-based merging, it still invokes git internally in some situations—especially when trying to delete branches or resolve merge base state.
+      # To safely enable GitHub CLI operations (like gh pr merge) that may call git, you must run actions/checkout, but you can do it in read-only, shallow mode and detached HEAD, like this.
+      - name: Minimal checkout for GH CLI merge compatibility
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ''
+
       - name: Process and merge PRs
         run: |
           retry() {
