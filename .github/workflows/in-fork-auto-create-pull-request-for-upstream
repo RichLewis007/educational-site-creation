@@ -1,5 +1,5 @@
 name: in-fork-auto-create-pull-request-for-upstream
-by Rich Lewis @RichLewis007
+by Rich Lewis - @RichLewis007
 
 # High-Level Logic:
 #    Only runs if the push occurs in your fork (github.repository_owner == 'RichLewis007')
