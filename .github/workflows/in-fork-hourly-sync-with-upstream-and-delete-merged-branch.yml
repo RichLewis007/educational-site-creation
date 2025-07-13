@@ -91,7 +91,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y gh
-          echo "${GH_TOKEN}" | gh auth login --with-token
+          gh auth status
 
       - name: Get all branches in fork (excluding default)
         id: list-branches
