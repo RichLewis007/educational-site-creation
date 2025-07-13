@@ -1,5 +1,4 @@
 name: in-upstream-auto-merge-pull-requests
-# By Rich Lewis - @RichLewis007
 
 on:
   pull_request_target:
