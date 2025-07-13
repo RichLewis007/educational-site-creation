@@ -1,0 +1,125 @@
+name: in-fork-hourly-sync-with-upstream-and-delete-merged-branch
+# by Rich Lewis @RichLewis007
+
+# Only run these jobs in the Fork, not the Upstream Repo.
+# 1. Sync with upstream (Fetch, Merge upstream/main into origin/main, Push changes back to origin)
+# 2. Get all branches in Fork (except main)
+# 3. Check for merged PRs, comment with timestamp, and delete merged branch from forked repo.
+
+# To post comments and delete branches, your GH_TOKEN (used in secrets.FORK_GH_TOKEN4) must have:
+#    Repo scope
+#    Write access to your fork
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Runs every hour
+  workflow_dispatch:
+
+# Immediately cancel workflow if this is not the fork
+jobs:
+  precheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel if not running in fork
+        run: |
+          echo "🔍 Running in repo: ${{ github.repository }}"
+          if [ "${{ github.repository_owner }}" != "RichLewis007" ]; then
+            echo "⛔ Exiting: This workflow is only for the fork."
+            exit 0
+          fi
+
+# SYNC job ==================================================================
+# Sync with upstream (Fetch, Merge upstream/main into origin/main, Push changes back to origin)
+
+  sync:
+    needs: precheck
+    if: ${{ github.repository_owner == 'RichLewis007' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
+      
+    steps:
+      - name: Confirm GH_TOKEN is set
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "❌ GH_TOKEN is missing. Please set the secret correctly."
+            exit 1
+          else
+            echo "✅ GH_TOKEN appears to be set."
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        # with:
+        #  persist-credentials: false
+
+      - name: Show auth status
+        run: gh auth status
+
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote and fetch
+        run: |
+          git remote add upstream https://github.com/MakerFriends/educational-site-creation.git
+          git fetch upstream
+
+      - name: Merge upstream/main into origin/main
+        run: |
+          git checkout main
+          git merge upstream/main --no-edit || echo "Already up to date"
+
+      - name: Push changes back to origin
+        run: |
+          git push https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }} main
+
+# CLEANUP job ==================================================================
+# - Get all branches in fork (except main)
+# - Check for merged PRs, comment with ET timestamp, and delete
+
+  cleanup:
+    needs: sync
+    if: ${{ github.repository_owner == 'RichLewis007' }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
+
+    steps:
+      - name: Install GitHub CLI
+        run: |
+          sudo apt update
+          sudo apt install -y gh
+          echo "${GH_TOKEN}" | gh auth login --with-token
+
+      - name: Get all branches in fork (except main)
+        id: list-branches
+        run: |
+          gh repo set-default RichLewis007/educational-site-creation
+          gh api repos/RichLewis007/educational-site-creation/branches \
+            --paginate \
+            -q '.[] | select(.name != "main") | .name' > fork-branches.txt
+
+      - name: Check for merged PRs, comment with ET timestamp, and delete
+        run: |
+          # Use New York timezone for U.S. Eastern Time (accounts for DST)
+          TIMESTAMP=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
+
+          while read branch; do
+            echo "🔍 Checking for merged PR for branch: $branch"
+            pr_number=$(gh pr list --head "$branch" --state merged --json number --jq '.[0].number')
+
+            if [ -n "$pr_number" ]; then
+              echo "✅ Merged PR found: #$pr_number"
+
+              COMMENT="🧹 This branch had a PR which was merged with the upstream repo, so it's being deleted from the forked repo. 🗑️\n\n🕒 Timestamp: $TIMESTAMP\n👤 Ping: @RichLewis007"
+              echo "💬 Commenting on PR #$pr_number"
+              gh pr comment "$pr_number" --body "$COMMENT"
+
+              echo "🗑️ Deleting branch '$branch' from fork..."
+              gh api --method DELETE repos/RichLewis007/educational-site-creation/git/refs/heads/"$branch"
+            else
+              echo "⏩ Branch '$branch' has no merged PR. Skipping."
+            fi
+          done < fork-branches.txt
