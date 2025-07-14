@@ -22,6 +22,7 @@ jobs:
     steps:
       - name: Cancel if not running in fork
         run: |
+          echo " ----==== Action version: 1.00 ====---- "
           echo "🔍 Running in repo: ${{ github.repository }}"
           echo "🔍 Repository owner: ${{ github.repository_owner }}"
           if [ "${{ github.repository_owner }}" != "RichLewis007" ]; then
@@ -144,8 +145,6 @@ jobs:
 
       - name: Check for merged PRs, comment with timestamp, and delete
         run: |
-
-          echo "----==== Action version: 1.00 ----===="
           
           echo "🔍 Detecting default branch..."
           DEFAULT_BRANCH=$(gh repo view RichLewis007/educational-site-creation --json defaultBranchRef -q '.defaultBranchRef.name')
