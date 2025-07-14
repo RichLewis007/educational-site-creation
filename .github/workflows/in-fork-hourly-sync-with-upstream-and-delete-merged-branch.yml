@@ -99,6 +99,52 @@ jobs:
 
       - name: Get all branches in fork (excluding default)
         run: |
+          # echo "🔍 Detecting default branch..."
+          # DEFAULT_BRANCH=$(gh repo view RichLewis007/educational-site-creation --json defaultBranchRef -q '.defaultBranchRef.name')
+          # DEFAULT_BRANCH=$(echo "$DEFAULT_BRANCH" | tr -d '\r\n')
+
+          # echo "🧭 Default branch: $DEFAULT_BRANCH"
+          
+          # echo "🔐 Verifying repo access with gh repo view..."
+          # gh repo view RichLewis007/educational-site-creation || {
+          #   echo "❌ Unable to access repo. Check GH_TOKEN permissions."
+          #   exit 1
+          # }
+
+          # echo "📂 Fetching all branches from GitHub API..."
+          # if ! gh api repos/RichLewis007/educational-site-creation/branches \
+          #   --paginate \
+          #   -q '.[] | .name' > all-branches.txt; then
+          #   echo "❌ Failed to fetch branches. Possible auth error or repo access issue."
+          #   exit 1
+          # fi
+          
+          # # echo "📄 All branches (raw):"
+          # # cat all-branches.txt || echo "(none found)"
+      
+          # echo "🧹 Filtering out default branch..."
+          # # grep -v "^$DEFAULT_BRANCH$" all-branches.txt > fork-branches.txt
+          # awk -v def="$DEFAULT_BRANCH" '$0 != def' all-branches.txt > fork-branches.txt
+      
+          # echo "✅ Filtered branch list (excluding '$DEFAULT_BRANCH'):"
+          # if [ -s fork-branches.txt ]; then
+          #   nl fork-branches.txt
+          # else
+          #   echo "(none found after filtering)"
+          #   head -n 5 all-branches.txt | cat -A
+          # fi
+
+      # Even though gh pr merge technically supports API-based merging, it still invokes git internally in some situations—especially when trying to delete branches or resolve merge base state.
+      # To safely enable GitHub CLI operations (like gh pr merge) that may call git, you must run actions/checkout, but you can do it in read-only, shallow mode and detached HEAD, like this.
+      - name: Minimal checkout for GH CLI merge compatibility
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          ref: ''
+
+      - name: Check for merged PRs, comment with ET timestamp, and delete
+        run: |
+
           echo "🔍 Detecting default branch..."
           DEFAULT_BRANCH=$(gh repo view RichLewis007/educational-site-creation --json defaultBranchRef -q '.defaultBranchRef.name')
           DEFAULT_BRANCH=$(echo "$DEFAULT_BRANCH" | tr -d '\r\n')
@@ -133,17 +179,8 @@ jobs:
             echo "(none found after filtering)"
             head -n 5 all-branches.txt | cat -A
           fi
-
-      # Even though gh pr merge technically supports API-based merging, it still invokes git internally in some situations—especially when trying to delete branches or resolve merge base state.
-      # To safely enable GitHub CLI operations (like gh pr merge) that may call git, you must run actions/checkout, but you can do it in read-only, shallow mode and detached HEAD, like this.
-      - name: Minimal checkout for GH CLI merge compatibility
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          ref: ''
-
-      - name: Check for merged PRs, comment with ET timestamp, and delete
-        run: |
+          
+          
           # Use New York timezone for U.S. Eastern Time (accounts for DST)
           TIMESTAMP=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
           echo "🕒 Local timestamp for PR comments: $TIMESTAMP"
