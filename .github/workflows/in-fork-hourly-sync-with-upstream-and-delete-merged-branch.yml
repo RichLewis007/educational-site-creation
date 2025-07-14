@@ -151,48 +151,32 @@ jobs:
           fi
 
           while read branch; do
-            echo "🔁 Processing branch: '$branch'"
-            
-            # echo "🔍 Checking Upstream for merged PR for Fork branch: $branch"
-            # x pr_number=$(gh pr list --head "$branch" --state merged --json number --jq '.[0].number')
-            
-            echo "🔍 Checking for merged PR in upstream from fork branch: RichLewis007:$branch"
-            
-            #pr_number=$(gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" --state merged --json number --jq '.[0].number')
-            #echo "All PRs: #$pr_number"
+                     
+            echo "🔍 Checking for merged PR in upstream from fork branch: $branch"
 
             # ---
-              #            --state merged \
             
             echo "📋 All matching merged PRs for branch '$branch':"
-            #            --head "RichLewis007:$branch" --state merged
+                      
+            # echo "------------------------"
             
-            echo "------------------------"
-            gh pr list --repo MakerFriends/educational-site-creation \
-              --state merged \
-              --json number,title,state,headRefName,headRepositoryOwner \
-              --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007") | "\(.number) \(.headRefName) \(.title)"'
+            # gh pr list --repo MakerFriends/educational-site-creation \
+            #   --state merged \
+            #   --json number,title,state,headRefName,headRepositoryOwner \
+            #   --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007") | "\(.number) \(.headRefName) \(.title)"'
             
             echo "------------------------"
             gh pr list --repo MakerFriends/educational-site-creation \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
-              --jq '.[] | select(.headRefName == "$branch") | "\(.number)"'
+             --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number")
 
-            echo "------------------------ .headRepositoryOwner.login == RichLewis007 and "
+            echo "------------------------"
             
             pr_number=$(gh pr list --repo MakerFriends/educational-site-creation \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
               --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number")
-
-            # ---      
-            #           --json number,title,state,headRefName \
-            #--jq '.[] | "PR #\(.number): \(.title) [\(.state)] from \(.headRefName)"'
-              
-            #pr_number=$(gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" --state merged --json number --jq '.[0].number')
-
-            # pr_number=241
             
             if [ -n "$pr_number" ]; then
               echo "✅ Merged PR found: #$pr_number"
