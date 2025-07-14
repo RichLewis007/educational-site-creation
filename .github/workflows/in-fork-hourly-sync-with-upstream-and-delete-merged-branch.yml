@@ -175,7 +175,7 @@ jobs:
             gh pr list --repo MakerFriends/educational-site-creation \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
-              --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007" and .headRefName == "$branch") | .number')
+              --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007" and .headRefName == "$branch") | "\(.number)"'
 
             
             # ---      
