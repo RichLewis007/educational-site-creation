@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Show auth status
-        run: gh auth status
+        run: gh auth status || exit 1
 
       - name: Set up Git
         run: |
@@ -91,12 +91,13 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ secrets.FORK_GH_TOKEN4 }}
+      DRY_RUN: false
     steps:
       - name: Install GitHub CLI and confirm auth
         run: |
           sudo apt update
           sudo apt install -y gh jq
-          gh auth status
+          gh auth status || exit 1
 
       # Even though gh pr merge technically supports API-based merging, it still invokes git internally in some situations—especially when trying to delete branches or resolve merge base state.
       # To safely enable GitHub CLI operations (like gh pr merge) that may call git, you must run actions/checkout, but you can do it in read-only, shallow mode and detached HEAD, like this.
@@ -108,7 +109,6 @@ jobs:
 
       - name: Check for merged PRs, comment with timestamp, and delete
         run: |
-          
           echo "🔍 Detecting default branch..."
           DEFAULT_BRANCH=$(gh repo view RichLewis007/educational-site-creation --json defaultBranchRef -q '.defaultBranchRef.name')
           DEFAULT_BRANCH=$(echo "$DEFAULT_BRANCH" | tr -d '\r\n')
@@ -144,8 +144,13 @@ jobs:
           TIMESTAMP=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
           echo "🕒 Local timestamp for PR comments: $TIMESTAMP"
 
-          while read branch; do
+          while IFS= read -r branch; do
                      
+            if [[ "$branch" == "$DEFAULT_BRANCH" ]]; then
+              echo "⚠️ Skipping deletion of default branch: $branch"
+              continue
+            fi
+
             echo "🔍 Checking for merged PR in upstream from fork branch: $branch"
 
             # ---
@@ -160,27 +165,36 @@ jobs:
             #   --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007") | "\(.number) \(.headRefName) \(.title)"'
             
             echo "------------------------"
-            gh pr list --repo MakerFriends/educational-site-creation \
+            #gh pr list --repo MakerFriends/educational-site-creation \
+            gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
-             --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number")
+              --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number"
 
             echo "------------------------"
             
-            pr_number=$(gh pr list --repo MakerFriends/educational-site-creation \
+            #pr_number=$(gh pr list --repo MakerFriends/educational-site-creation \
+            pr_number=$(gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
-              --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number")
-            
+              --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number"
+
             if [ -n "$pr_number" ]; then
-              echo "✅ Merged PR found: #$pr_number"
+              echo "🔎 Raw PR lookup result: $pr_number"
 
-              COMMENT="🧹 This branch had a PR which was merged with the upstream repo, so it's being deleted from the forked repo. 🗑️\n\n🕒 Timestamp: $TIMESTAMP\n👤 Ping: @RichLewis007"
-              echo "💬 Commenting on PR #$pr_number"
-              gh pr comment "$pr_number" --body "$COMMENT" --repo MakerFriends/educational-site-creation
-
-              echo "🗑️ Deleting branch '$branch' from fork..."
-              gh api --method DELETE repos/RichLewis007/educational-site-creation/git/refs/heads/"$branch"
+              if [ "$DRY_RUN" = false ]; then
+                echo "✅ Merged PR found: #$pr_number"
+  
+                COMMENT="🧹 This branch had a PR which was merged with the upstream repo, so it's being deleted from the forked repo. 🗑️\n\n🕒 Timestamp: $TIMESTAMP\n👤 Ping: @RichLewis007"
+                echo "💬 Commenting on PR #$pr_number"
+                gh pr comment "$pr_number" --body "$COMMENT" --repo MakerFriends/educational-site-creation
+  
+                echo "🗑️ Deleting branch '$branch' from fork..."
+                gh api --method DELETE "repos/RichLewis007/educational-site-creation/git/refs/heads/$branch"
+                echo "$branch" >> deleted-branches-$(date +%Y%m%d).log
+              else
+                echo "💤 If not set to DRY RUN: would add a comment and delete $branch"
+              fi                  
             else
               echo "⏩ No merged PR found for branch '$branch'. Skipping."
             fi
