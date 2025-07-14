@@ -69,11 +69,11 @@ jobs:
           echo "📥 Checking out main branch..."
           git checkout main
           
-          echo "🔄 Merging upstream/main into main..."
-          git merge upstream/main --no-edit || echo "Already up to date"
+          #echo "🔄 Merging upstream/main into main..."
+          #git merge upstream/main --no-edit || echo "Already up to date"
 
-          #x Use --allow-unrelated-histories only when histories are disconnected
-          #x git merge upstream/main --no-edit --allow-unrelated-histories || echo "Already up to date"
+          # Use --allow-unrelated-histories only when histories are disconnected
+          git merge upstream/main --no-edit --allow-unrelated-histories || echo "Already up to date"
 
           git log --oneline --graph --decorate -n 10
 
