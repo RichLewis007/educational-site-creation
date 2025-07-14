@@ -180,6 +180,10 @@ jobs:
               --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007" and .headRefName == "$branch") | "\(.number)"'
 
             echo "------------------------"
+            pr_number=gh pr list --repo MakerFriends/educational-site-creation \
+              --state merged \
+              --json number,headRefName,headRepositoryOwner \
+              --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007" and .headRefName == "$branch") | "\(.number)"'
             
             # ---      
                #           --json number,title,state,headRefName \
@@ -187,7 +191,7 @@ jobs:
               
             #pr_number=$(gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" --state merged --json number --jq '.[0].number')
 
-            pr_number=307
+            # pr_number=241
             
             if [ -n "$pr_number" ]; then
               echo "✅ Merged PR found: #$pr_number"
