@@ -136,19 +136,12 @@ jobs:
           if [ -s fork-branches.txt ]; then
             nl fork-branches.txt
           else
-            echo "(none found after filtering)"
-            head -n 5 all-branches.txt | cat -A
+            echo "⚠️ No branches found to process. Exiting cleanup."
           fi
           
           # Use New York timezone for U.S. Eastern Time (accounts for DST)
           TIMESTAMP=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
           echo "🕒 Local timestamp for PR comments: $TIMESTAMP"
-
-          if [ ! -s fork-branches.txt ]; then
-            echo "⚠️ No branches found to process. Exiting cleanup."
-            head -n 5 all-branches.txt | cat -A
-            exit 0
-          fi
 
           while read branch; do
                      
