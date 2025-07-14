@@ -69,6 +69,7 @@ jobs:
           git checkout main
           echo "🔄 Merging upstream/main into main..."
           # git merge upstream/main --no-edit || echo "Already up to date"
+          # Use --allow-unrelated-histories only when histories are disconnected
           git merge upstream/main --no-edit --allow-unrelated-histories || echo "Already up to date"
 
           git log --oneline --graph --decorate -n 10
@@ -111,7 +112,8 @@ jobs:
           cat all-branches.txt || echo "(none found)"
       
           echo "🧹 Filtering out default branch..."
-          grep -v "^$DEFAULT_BRANCH\$" all-branches.txt > fork-branches.txt
+          #grep -v "^$DEFAULT_BRANCH$" all-branches.txt > fork-branches.txt
+          awk -v def="$DEFAULT_BRANCH" '$0 != def' all-branches.txt > fork-branches.txt
       
           echo "✅ Filtered branch list (excluding '$DEFAULT_BRANCH'):"
           if [ -s fork-branches.txt ]; then
@@ -131,6 +133,7 @@ jobs:
 
       - name: Check for merged PRs, comment with ET timestamp, and delete
         run: |
+          # Use New York timezone for U.S. Eastern Time (accounts for DST)
           TIMESTAMP=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
           echo "🕒 Local timestamp for PR comments: $TIMESTAMP"
 
