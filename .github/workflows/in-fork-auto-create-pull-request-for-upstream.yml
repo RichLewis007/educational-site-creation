@@ -29,9 +29,10 @@ jobs:
     outputs:
       is-fork: ${{ steps.check.outputs.is-fork }}
     steps:
-      - name: Check if this is the fork
+      - name: Check if this is the Fork, not the Upstream repo
         id: check
         run: |
+          echo " -----===== Action version 1.00 =====----- "
           echo "🧠 Repo: ${{ github.repository }}"
           if [ "${{ github.repository_owner }}" == "RichLewis007" ]; then
             echo "is-fork=true" >> "$GITHUB_OUTPUT"
