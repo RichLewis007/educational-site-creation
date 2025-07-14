@@ -137,7 +137,7 @@ jobs:
             nl fork-branches.txt
           else
             echo "⚠️ No branches found to process. Exiting cleanup."
-            exit 1
+            exit 0
           fi
           
           # Use New York timezone for U.S. Eastern Time (accounts for DST)
