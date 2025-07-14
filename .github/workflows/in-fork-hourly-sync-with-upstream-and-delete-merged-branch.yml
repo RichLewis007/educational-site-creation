@@ -68,7 +68,10 @@ jobs:
           echo "📥 Checking out main branch..."
           git checkout main
           echo "🔄 Merging upstream/main into main..."
-          git merge upstream/main --no-edit || echo "Already up to date"
+          # git merge upstream/main --no-edit || echo "Already up to date"
+          git merge upstream/main --no-edit --allow-unrelated-histories || echo "Already up to date"
+
+          git log --oneline --graph --decorate -n 10
 
       - name: Push changes back to origin
         run: |
