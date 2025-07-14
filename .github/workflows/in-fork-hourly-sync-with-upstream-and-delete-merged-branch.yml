@@ -167,16 +167,19 @@ jobs:
             echo "📋 All matching merged PRs for branch '$branch':"
             #            --head "RichLewis007:$branch" --state merged
             
+            echo "------------------------"
             gh pr list --repo MakerFriends/educational-site-creation \
               --state merged \
               --json number,title,state,headRefName,headRepositoryOwner \
               --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007") | "\(.number) \(.headRefName) \(.title)"'
-
+            
+            echo "------------------------"
             gh pr list --repo MakerFriends/educational-site-creation \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
               --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007" and .headRefName == "$branch") | "\(.number)"'
 
+            echo "------------------------"
             
             # ---      
                #           --json number,title,state,headRefName \
