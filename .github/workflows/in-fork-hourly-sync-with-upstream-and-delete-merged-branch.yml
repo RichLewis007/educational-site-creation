@@ -177,7 +177,7 @@ jobs:
             pr_number=$(gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
-              --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number"
+              --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number")
 
             if [ -n "$pr_number" ]; then
               echo "🔎 Raw PR lookup result: $pr_number"
@@ -185,13 +185,17 @@ jobs:
               if [ "$DRY_RUN" = false ]; then
                 echo "✅ Merged PR found: #$pr_number"
   
-                COMMENT="🧹 This branch had a PR which was merged with the upstream repo, so it's being deleted from the forked repo. 🗑️\n\n🕒 Timestamp: $TIMESTAMP\n👤 Ping: @RichLewis007"
+                COMMENT="🧹 This branch had a PR which was merged with the upstream repo, so it's being deleted from the forked repo. 🗑️  🕒 Timestamp: $TIMESTAMP  👤 Ping: @RichLewis007"
                 echo "💬 Commenting on PR #$pr_number"
                 gh pr comment "$pr_number" --body "$COMMENT" --repo MakerFriends/educational-site-creation
   
                 echo "🗑️ Deleting branch '$branch' from fork..."
                 gh api --method DELETE "repos/RichLewis007/educational-site-creation/git/refs/heads/$branch"
-                echo "$branch" >> deleted-branches-$(date +%Y%m%d).log
+                
+                LOGFILE="deleted-branches-$(date +%Y%m%d).log"
+                echo "$branch" >> "$LOGFILE"
+                echo "📝 Logged deleted branch: $branch → $LOGFILE"
+
               else
                 echo "💤 If not set to DRY RUN: would add a comment and delete $branch"
               fi                  
