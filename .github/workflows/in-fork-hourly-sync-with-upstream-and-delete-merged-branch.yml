@@ -97,8 +97,8 @@ jobs:
           sudo apt install -y gh jq
           gh auth status
 
-      - name: Get all branches in fork (excluding default)
-        run: |
+      # - name: Get all branches in fork (excluding default)
+      #   run: |
           # echo "🔍 Detecting default branch..."
           # DEFAULT_BRANCH=$(gh repo view RichLewis007/educational-site-creation --json defaultBranchRef -q '.defaultBranchRef.name')
           # DEFAULT_BRANCH=$(echo "$DEFAULT_BRANCH" | tr -d '\r\n')
@@ -142,9 +142,11 @@ jobs:
           fetch-depth: 1
           ref: ''
 
-      - name: Check for merged PRs, comment with ET timestamp, and delete
+      - name: Check for merged PRs, comment with timestamp, and delete
         run: |
 
+          echo "----==== Action version: 1.00 ----===="
+          
           echo "🔍 Detecting default branch..."
           DEFAULT_BRANCH=$(gh repo view RichLewis007/educational-site-creation --json defaultBranchRef -q '.defaultBranchRef.name')
           DEFAULT_BRANCH=$(echo "$DEFAULT_BRANCH" | tr -d '\r\n')
@@ -164,9 +166,6 @@ jobs:
             echo "❌ Failed to fetch branches. Possible auth error or repo access issue."
             exit 1
           fi
-          
-          # echo "📄 All branches (raw):"
-          # cat all-branches.txt || echo "(none found)"
       
           echo "🧹 Filtering out default branch..."
           # grep -v "^$DEFAULT_BRANCH$" all-branches.txt > fork-branches.txt
@@ -179,7 +178,6 @@ jobs:
             echo "(none found after filtering)"
             head -n 5 all-branches.txt | cat -A
           fi
-          
           
           # Use New York timezone for U.S. Eastern Time (accounts for DST)
           TIMESTAMP=$(TZ="America/New_York" date +"%Y-%m-%d %I:%M:%S %p %Z")
