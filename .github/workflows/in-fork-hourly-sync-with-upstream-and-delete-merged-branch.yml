@@ -165,16 +165,17 @@ jobs:
             #   --jq '.[] | select(.headRepositoryOwner.login == "RichLewis007") | "\(.number) \(.headRefName) \(.title)"'
             
             echo "------------------------"
-            #gh pr list --repo MakerFriends/educational-site-creation \
-            gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" \
+
+            gh pr list --repo MakerFriends/educational-site-creation \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
               --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number"
 
             echo "------------------------"
-            
-            #pr_number=$(gh pr list --repo MakerFriends/educational-site-creation \
-            pr_number=$(gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" \
+
+            echo "🔬 Looking for merged PR from RichLewis007:$branch in upstream..."
+
+            pr_number=$(gh pr list --repo MakerFriends/educational-site-creation \
               --state merged \
               --json number,headRefName,headRepositoryOwner \
               --jq ".[] | select(.headRepositoryOwner.login == \"RichLewis007\" and .headRefName == \"$branch\") | .number")
