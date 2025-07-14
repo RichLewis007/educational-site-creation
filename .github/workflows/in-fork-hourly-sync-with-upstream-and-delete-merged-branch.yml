@@ -162,14 +162,15 @@ jobs:
             #echo "All PRs: #$pr_number"
 
             # ---
+              #            --state merged \
             echo "📋 All matching merged PRs for branch '$branch':"
             gh pr list --repo MakerFriends/educational-site-creation \
               --head "RichLewis007:$branch" \
-              --state merged \
-              --json number,title,state,headRefName \
-              --jq '.[] | "PR #\(.number): \(.title) [\(.state)] from \(.headRefName)"'
+              --state merged
             # ---      
-            
+               #           --json number,title,state,headRefName \
+              #--jq '.[] | "PR #\(.number): \(.title) [\(.state)] from \(.headRefName)"'
+              
             pr_number=$(gh pr list --repo MakerFriends/educational-site-creation --head "RichLewis007:$branch" --state merged --json number --jq '.[0].number')
 
             if [ -n "$pr_number" ]; then
