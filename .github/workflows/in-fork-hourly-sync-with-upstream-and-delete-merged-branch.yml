@@ -67,8 +67,10 @@ jobs:
         run: |
           echo "📥 Checking out main branch..."
           git checkout main
+          
           echo "🔄 Merging upstream/main into main..."
-          # git merge upstream/main --no-edit || echo "Already up to date"
+          ### git merge upstream/main --no-edit || echo "Already up to date"
+
           # Use --allow-unrelated-histories only when histories are disconnected
           git merge upstream/main --no-edit --allow-unrelated-histories || echo "Already up to date"
 
@@ -102,17 +104,26 @@ jobs:
           DEFAULT_BRANCH=$(echo "$DEFAULT_BRANCH" | tr -d '\r\n')
 
           echo "🧭 Default branch: $DEFAULT_BRANCH"
-      
-          echo "📂 Listing all branches..."
-          gh api repos/RichLewis007/educational-site-creation/branches \
+          
+          echo "🔐 Verifying repo access with gh repo view..."
+          gh repo view RichLewis007/educational-site-creation || {
+            echo "❌ Unable to access repo. Check GH_TOKEN permissions."
+            exit 1
+          }
+
+          echo "📂 Fetching all branches from GitHub API..."
+          if ! gh api repos/RichLewis007/educational-site-creation/branches \
             --paginate \
-            -q '.[] | .name' > all-branches.txt
-      
-          echo "📄 All branches (raw):"
-          cat all-branches.txt || echo "(none found)"
+            -q '.[] | .name' > all-branches.txt; then
+            echo "❌ Failed to fetch branches. Possible auth error or repo access issue."
+            exit 1
+          fi
+          
+          # echo "📄 All branches (raw):"
+          # cat all-branches.txt || echo "(none found)"
       
           echo "🧹 Filtering out default branch..."
-          #grep -v "^$DEFAULT_BRANCH$" all-branches.txt > fork-branches.txt
+          # grep -v "^$DEFAULT_BRANCH$" all-branches.txt > fork-branches.txt
           awk -v def="$DEFAULT_BRANCH" '$0 != def' all-branches.txt > fork-branches.txt
       
           echo "✅ Filtered branch list (excluding '$DEFAULT_BRANCH'):"
