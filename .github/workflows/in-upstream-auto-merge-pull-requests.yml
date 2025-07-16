@@ -31,6 +31,7 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.UPSTREAM_GH_TOKEN }}
+      MANUAL_PR: ${{ inputs.pr_number }}
 
     permissions:
       pull-requests: write
@@ -52,8 +53,8 @@ jobs:
         run: |
           if [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
             echo "PR_LIST=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "${{ inputs.pr_number }}" ]]; then
-            echo "PR_LIST=${{ inputs.pr_number }}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$MANUAL_PR" ]]; then
+            echo "PR_LIST=$MANUAL_PR" >> "$GITHUB_OUTPUT"
           else
             echo "🔍 Gathering all open PRs labeled 'automerge'..."
             gh pr list --state open --json number,labels \
@@ -76,7 +77,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
-          ref: ''
 
       - name: Process and merge PRs
         run: |
