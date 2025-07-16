@@ -55,6 +55,7 @@ jobs:
       - name: Determine PRs to process
         id: gather
         run: |
+          gh auth status
           if [[ "${{ github.event_name }}" == "pull_request_target" ]]; then
             echo "PR_LIST=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
           elif [[ -n "$MANUAL_PR" ]]; then
@@ -63,8 +64,10 @@ jobs:
             echo "🔍 Gathering all open PRs labeled 'automerge'..."
             gh pr list --state open --json number,labels \
               --jq '[.[] | select(.labels | any(.name == "automerge")) | .number]' > pr_numbers.json
+            cat pr_numbers.json
 
             PR_LIST=$(jq -r '. | join(" ")' pr_numbers.json)
+            echo "$PR_LIST"
             if [[ -z "$PR_LIST" ]]; then
               echo "❌ No PRs found with 'automerge' label. Exiting."
               exit 0
