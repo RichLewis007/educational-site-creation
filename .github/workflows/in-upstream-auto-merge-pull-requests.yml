@@ -24,7 +24,7 @@ jobs:
           echo "🔍 Running in repo: ${{ github.repository }}"
           if [ "${{ github.repository_owner }}" != "MakerFriends" ]; then
             echo "⛔ Exiting: This workflow can only be run in the upstream repo owned by MakerFriends."
-            exit 0
+            exit 1
           fi
 
   in-upstream-auto-merge-pr:
@@ -42,7 +42,7 @@ jobs:
       contents: write
 
     steps:
-       - name: Confirm GH_TOKEN is set and show auth status
+      - name: Confirm GH_TOKEN is set and show auth status
         run: |
           if [ -z "$GH_TOKEN" ]; then
             echo "❌ GH_TOKEN is missing. Please set the UPSTREAM_GH_TOKEN secret in the upstream repo owned by MakerFriends."
