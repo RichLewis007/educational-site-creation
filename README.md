@@ -6,6 +6,6 @@ Students may experiment with advanced GitHub action development here, pull reque
 
 ---
 
-[![in-fork-auto-create-pull-request-for-upstream](https://github.com/RichLewis007/educational-site-creation/actions/workflows/in-fork-auto-create-pull-request-for-upstream.yml/badge.svg)](https://github.com/RichLewis007/educational-site-creation/actions/workflows/in-fork-auto-create-pull-request-for-upstream.yml)
+[![create-pull-request](https://github.com/RichLewis007/educational-site-creation/actions/workflows/in-fork-auto-create-pull-request-for-upstream.yml/badge.svg)](https://github.com/RichLewis007/educational-site-creation/actions/workflows/in-fork-auto-create-pull-request-for-upstream.yml)
 
-[![in-fork-hourly-sync-with-upstream-and-delete-merged-branch](https://github.com/RichLewis007/educational-site-creation/actions/workflows/in-fork-hourly-sync-with-upstream-and-delete-merged-branch.yml/badge.svg)](https://github.com/RichLewis007/educational-site-creation/actions/workflows/in-fork-hourly-sync-with-upstream-and-delete-merged-branch.yml)
+[![hourly-sync-with-upstream](https://github.com/RichLewis007/educational-site-creation/actions/workflows/in-fork-hourly-sync-with-upstream-and-delete-merged-branch.yml/badge.svg)](https://github.com/RichLewis007/educational-site-creation/actions/workflows/in-fork-hourly-sync-with-upstream-and-delete-merged-branch.yml)
