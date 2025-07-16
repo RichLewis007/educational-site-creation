@@ -16,6 +16,8 @@ jobs:
 
   precheck:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
     steps:
       - name: Cancel if not running in upstream repo
         run: |
@@ -27,6 +29,8 @@ jobs:
 
   in-upstream-auto-merge-pr:
     needs: precheck
+    # Need to do this here as well as in the precheck.
+    if: ${{ github.repository_owner == 'MakerFriends' }}
     runs-on: ubuntu-latest
 
     env:
@@ -38,7 +42,7 @@ jobs:
       contents: write
 
     steps:
-      - name: Confirm GH_TOKEN is set and show auth status
+       - name: Confirm GH_TOKEN is set and show auth status
         run: |
           if [ -z "$GH_TOKEN" ]; then
             echo "❌ GH_TOKEN is missing. Please set the UPSTREAM_GH_TOKEN secret in the upstream repo owned by MakerFriends."
@@ -58,7 +62,7 @@ jobs:
           else
             echo "🔍 Gathering all open PRs labeled 'automerge'..."
             gh pr list --state open --json number,labels \
-              --jq '[.[] | select(.labels[].name == "automerge") | .number]' > pr_numbers.json
+              --jq '[.[] | select(.labels | any(.name == "automerge")) | .number]' > pr_numbers.json
 
             PR_LIST=$(jq -r '. | join(" ")' pr_numbers.json)
             if [[ -z "$PR_LIST" ]]; then
