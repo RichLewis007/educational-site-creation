@@ -1,4 +1,6 @@
 name: in-upstream-auto-merge-pull-requests
+# by Rich Lewis - @RichLewis007
+# Action to be run in the MakerFriends account.
 
 on:
   pull_request_target:
@@ -19,13 +21,12 @@ jobs:
         run: |
           echo "🔍 Running in repo: ${{ github.repository }}"
           if [ "${{ github.repository_owner }}" != "MakerFriends" ]; then
-            echo "⛔ Exiting: This workflow is only for the upstream repo."
+            echo "⛔ Exiting: This workflow can only be run in the upstream repo owned by MakerFriends."
             exit 0
           fi
 
-  auto-merge:
+  in-upstream-auto-merge-pr:
     needs: precheck
-    if: ${{ github.repository_owner == 'MakerFriends' }}
     runs-on: ubuntu-latest
 
     env:
@@ -39,12 +40,12 @@ jobs:
       - name: Confirm GH_TOKEN is set and show auth status
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "❌ GH_TOKEN is missing. Please set the UPSTREAM_GH_TOKEN secret."
+            echo "❌ GH_TOKEN is missing. Please set the UPSTREAM_GH_TOKEN secret in the upstream repo owned by MakerFriends."
+            echo "This is set in the Repo's Settings menu, which points to the key of a different name set in the account Settings menu."
             exit 1
           fi
           echo "✅ GH_TOKEN is set. Checking auth status..."
           gh auth status
-
 
       - name: Determine PRs to process
         id: gather
@@ -67,8 +68,10 @@ jobs:
             echo "PR_LIST=$PR_LIST" >> "$GITHUB_OUTPUT"
           fi
 
-      # Even though gh pr merge technically supports API-based merging, it still invokes git internally in some situations—especially when trying to delete branches or resolve merge base state.
-      # To safely enable GitHub CLI operations (like gh pr merge) that may call git, you must run actions/checkout, but you can do it in read-only, shallow mode and detached HEAD, like this.
+      # Even though gh pr merge technically supports API-based merging, it still invokes git internally 
+      # in some situations—especially when trying to delete branches or resolve merge base state.
+      # To safely enable GitHub CLI operations (like gh pr merge) that may call git, you must run 
+      # actions/checkout, but you can do it in read-only, shallow mode and detached HEAD, like this.
       - name: Minimal checkout for GH CLI merge compatibility
         uses: actions/checkout@v4
         with:
@@ -79,7 +82,7 @@ jobs:
         run: |
           retry() {
             local tries=3
-            local delay=5
+            local delay=60
             local count=0
             until "$@"; do
               exit_code=$?
@@ -96,8 +99,9 @@ jobs:
           }
 
           for PR_NUM in ${{ steps.gather.outputs.PR_LIST }}; do
-            echo "🔍 Evaluating PR #$PR_NUM"
+            echo "🔍 Evaluating PR #$PR_NUM - has state OPEN? have label AUTOMERGE? have label DO-NOT-MERGE? has status MERGABLE?"
 
+            # Use retry fn to try this 3 times
             retry gh pr view "$PR_NUM" --json number,title,state,mergeable,labels,isCrossRepository --jq '.' > pr.json
             PR_JSON=$(cat pr.json)
 
@@ -137,6 +141,7 @@ jobs:
             fi
 
             echo "✅ All conditions met. Attempting to merge PR #$PR_NUM..."
+            # Use retry fn to try this 3 times
             if retry gh pr merge "$PR_NUM" \
               --squash \
               --delete-branch \
